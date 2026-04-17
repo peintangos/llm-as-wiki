@@ -13,7 +13,8 @@
 
 このリポジトリは Ralph Matsuo テンプレートをベースにした実験環境で、現在 1 件の PRD がアクティブです。
 
-- `docs/prds/prd-llm-wiki/` — Andrej Karpathy の LLM Wiki パターンを spec-driven 開発と組み合わせた運用実験。`raw/` と `wiki/` を新設し、Ingest / Query / Lint の 3 操作を CLAUDE.md スキーマに追加する。Pilot ingest の結果は記事ドラフトの一次素材として `knowledge.md` に蓄積する。完了後、有効な要素は `backport` で Ralph Matsuo 本家テンプレートに逆流させる想定。
+- `docs/prds/prd-llm-wiki/` — **凍結済み（2026-04-17）**。Andrej Karpathy の LLM Wiki パターンを spec-driven 開発と組み合わせる足場（`raw/`、`wiki/`、`CLAUDE.md` スキーマ）の構築まで完了（spec-001〜003）。seed ingest（spec-004/005）は保留し、`prd-personal-agent` での organic growth 実験で得た知見を踏まえて再設計する想定。
+- `docs/prds/prd-personal-agent/` — **アクティブ**。peintangos 個人の目標と実績を可視化するダッシュボードを `personal-agent/` サブディレクトリに構築。Next.js 15 + Supabase + Vercel + shadcn/ui。MVP は対話 UI なし。実装中に参照した外部資料を `raw/` に投下し、`wiki/` が organic に育つ過程を `knowledge.md` に記録することで、Phase E（記事執筆）の一次素材とする。
 
 本家テンプレートリポジトリに戻す際は、プロダクト固有の PRD を同梱しない方針を保ちます。テンプレート自身を改善するとき、または別リポジトリへ Ralph を導入するときに `docs/prds/prd-{slug}/` を作成してください。
 
