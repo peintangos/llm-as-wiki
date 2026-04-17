@@ -24,6 +24,7 @@ Ralph Matsuo is a docs-first OSS template that treats PRD artifacts as the execu
 | CI automation | `.github/workflows/` | PRD creation and Ralph Loop |
 | Local validation | `package.json`, `scripts/` | Repo policy and regression checks |
 | IaC (optional) | `infra/` | CDK stack for EC2 self-hosted runner |
+| LLM Wiki raw (experimental) | `raw/` | Immutable source documents for the LLM Wiki pattern; added by `prd-llm-wiki`, scoped to this experiment repository |
 
 ## Repository Structure
 
@@ -45,6 +46,7 @@ Ralph Matsuo is a docs-first OSS template that treats PRD artifacts as the execu
 │   ├── ubiquitous/       # ubiquitous language dictionary
 │   └── prds/
 │       └── _template/
+├── raw/                  # (experimental, prd-llm-wiki) immutable source layer for LLM Wiki
 ├── scripts/
 │   ├── ralph/
 │   ├── lint-repo.sh

@@ -6,9 +6,9 @@ Each unchecked task should be small enough to complete in one `/implement` run o
 Mark completed tasks with `- [x]` instead of removing them.
 -->
 
-- [ ] spec-001: `./raw/README.md` を作成（コンベンション明記）
-- [ ] spec-001: `./raw/{articles,gists,papers,transcripts}/` を作成し `.gitkeep` を配置
-- [ ] spec-001: `.gitignore` を確認し `docs/architecture.md` に `raw/` を追記
+- [x] spec-001: `./raw/README.md` を作成（コンベンション明記）
+- [x] spec-001: `./raw/{articles,gists,papers,transcripts}/` を作成し `.gitkeep` を配置
+- [x] spec-001: `.gitignore` を確認し `docs/architecture.md` に `raw/` を追記
 - [ ] spec-002: `./wiki/README.md` を作成
 - [ ] spec-002: `./wiki/index.md` 初版を作成（空カタログ + フォーマット規約）
 - [ ] spec-002: `./wiki/log.md` 初版を作成（bootstrap エントリ）

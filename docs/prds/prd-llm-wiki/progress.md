@@ -6,7 +6,7 @@ Use only these status values: `pending`, `in-progress`, `done`
 
 | Specification | Title | Status | Completed On | Notes |
 |---------------|-------|--------|--------------|-------|
-| spec-001-raw-directory | raw/ ディレクトリを immutable source 層として新設する | pending | | |
+| spec-001-raw-directory | raw/ ディレクトリを immutable source 層として新設する | done | 2026-04-17 | raw/ scaffolding 完了、architecture.md 更新済み |
 | spec-002-wiki-scaffolding | wiki/ ディレクトリを LLM 維持層として scaffolding する | pending | | |
 | spec-003-claude-md-schema | CLAUDE.md に LLM Wiki スキーマを追加する | pending | | |
 | spec-004-seed-ingest | Seed ingest — raw/ への配置と wiki 生成 | pending | | |
@@ -14,5 +14,5 @@ Use only these status values: `pending`, `in-progress`, `done`
 
 ## Summary
 
-- Done: 0/5
-- Current focus: spec-001（raw/ の scaffolding から開始）
+- Done: 1/5
+- Current focus: spec-002（wiki/ scaffolding）
