@@ -25,6 +25,14 @@ Supabase / Next.js / Vercel の組み合わせで、忘れやすい接続ポイ�
 - `@base-ui/react` ベースの shadcn（`base-nova` preset）になっており、古い radix-based shadcn とは API が微妙に異なる可能性
 - `lucide-react` が `^1.8.0`（非常に新しい major）— デフォルトで `icon library: lucide` と components.json に記録されるが、旧来の 0.x 系とは import path が違う可能性あり（使うとき注意）
 
+### 2026-04-17 — Vercel の `-green` サフィックス
+
+`vercel link` で project 名を `personal-agent` として作ったら、Vercel 側が既存プロジェクトとの衝突を避けるため `-green` サフィックスを付けた。結果、本番 URL は `https://personal-agent-green.vercel.app`。
+
+- Vercel のプロジェクト名は Vercel アカウント内でユニーク性が要求される
+- 同名プロジェクトが既にある場合、Vercel は `-red` / `-blue` / `-green` などのランダムな色サフィックスを付ける
+- dashboard 上で rename は可能だが、URL は固定。記事では「プロジェクト名衝突で green になった」という小ネタとして使える
+
 ### 2026-04-17 — `create-next-app` が embedded .git を作ってしまう
 
 `npx create-next-app@latest personal-agent` は `personal-agent/.git/` を自動生成する。outer repo（llm-as-wiki）から見ると personal-agent はネストした git リポジトリとみなされ、`git add` すると gitlink（submodule 相当）として staged される。warning: `adding embedded git repository: personal-agent`。

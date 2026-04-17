@@ -56,10 +56,11 @@ personal-agent/
 
 ## Deploy
 
-Vercel に link 後、`ralph/personal-agent` ブランチへの push で preview deploy、`main` へのマージで production deploy の想定。
+- **Production**: https://personal-agent-green.vercel.app
+- Vercel に link 済み。`ralph/personal-agent` ブランチへの push で preview deploy、`main` へのマージで production deploy が自動実行される。
 
 ```bash
-# Vercel link（ブラウザ認証が必要なので peintangos が手動で 1 回だけ実行）
+# 初回 link（完了済み。環境を再作成するとき以外は不要）
 cd personal-agent
 npx vercel link
 ```

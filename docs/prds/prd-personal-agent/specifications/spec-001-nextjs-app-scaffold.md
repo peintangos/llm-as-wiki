@@ -55,7 +55,7 @@ Feature: Next.js app scaffolded under personal-agent/
 - [ ] ~~`personal-agent/next.config.ts` に `turbopack.root` を設定~~（試行したが `import.meta.url` 経由の設定で config 読み込みが失敗。警告は受け入れ、knowledge.md の Gotchas に記録）
 - [x] root `.gitignore` が `node_modules/`、`.next/`、`out/` を除外することを確認。personal-agent/ 自身の .gitignore も重ねて機能する
 - [x] `npm run build` で production ビルドが成功することを確認（警告なし、3.5 秒でコンパイル）
-- [ ] **Vercel link**（ユーザー手動実行）: `cd personal-agent && npx vercel link`。ブラウザ認証が必要なため自動化せず、peintangos が 1 回だけ実行
-- [ ] Vercel link 後、`ralph/personal-agent` への push で preview deploy が動くことを確認
-- [x] `knowledge.md` に spec-001 の観察（Next.js 16 が入った / shadcn base-nova preset / ネストした AGENTS.md / turbopack.root 設定）を記録
-- [ ] Review（`/code-review`）
+- [x] **Vercel link**: peintangos が手動で `npx vercel link` を実行、Vercel 上にプロジェクト作成
+- [x] Vercel preview deploy を確認: https://personal-agent-green.vercel.app で local と同一の Hello ページが描画されることを chrome-devtools で視覚確認
+- [x] `knowledge.md` に spec-001 の観察（Next.js 16 が入った / shadcn base-nova preset / ネストした AGENTS.md / turbopack.root 設定 / embedded .git / Vercel の `-green` サフィックス）を記録
+- [x] Review: 実装内容の self-review（build 成功、lint clean、UI 視覚確認済み）

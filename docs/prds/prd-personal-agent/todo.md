@@ -10,7 +10,7 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-001: shadcn/ui の button / card / input を導入（`base-nova` preset）
 - [x] spec-001: minimal "Hello" ページを配置、README 追加
 - [x] spec-001: root `.gitignore` が personal-agent/node_modules などを拾うか確認（OK、personal-agent/ 自身の .gitignore も重ねて効く）
-- [ ] spec-001: Vercel link → preview deploy 確認（**ユーザー手動実行必要**: `cd personal-agent && npx vercel link`、ブラウザ認証があるため自動化せず）
+- [x] spec-001: Vercel link → preview deploy 確認（手動実行完了。Production: https://personal-agent-green.vercel.app）
 - [ ] spec-002: Supabase プロジェクト接続（`.env.local` / `.env.example`）
 - [ ] spec-002: `@supabase/ssr` 導入、client / server / middleware helper 配置
 - [ ] spec-002: migration `0001_init.sql`（goals / metrics / actuals + RLS + metrics seed）
