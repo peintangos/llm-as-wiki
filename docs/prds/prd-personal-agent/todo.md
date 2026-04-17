@@ -19,10 +19,13 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-002: `app/page.tsx` を data/ 読み込みの Server Component に更新
 - [x] spec-002: build 成功（静的生成、warning なし）
 - [x] spec-002: ピボット意思決定記録を `raw/articles/` に投下、`knowledge.md` に詳細追記
-- [ ] spec-003: `app/goals/` のページ 3 種（一覧 / 新規 / 編集）と GoalForm / GoalCard / HorizonTabs コンポーネント
-- [ ] spec-003: `lib/data/goals.ts` に `writeGoal` / `deleteGoal` を追加（Server Action から呼ぶ）
-- [ ] spec-003: horizon ごとの period デフォルト util とテスト
-- [ ] spec-003: behavior/outcome バッジ表示
+- [x] spec-003: shadcn components（tabs / select / label / textarea / radio-group / badge）を追加
+- [x] spec-003: `lib/goals/period-defaults.ts`（日本の年度ベース、3yr/1yr/half/month）と `lib/goals/slug.ts`（`{period}-{horizon}-{random4}`）
+- [x] spec-003: `lib/data/goals.ts` に `writeGoal` / `deleteGoal`（gray-matter stringify + fs.writeFile）
+- [x] spec-003: `components/goals/{HorizonTabs, GoalCard, GoalForm}.tsx`（URL-driven tabs、behavior/outcome バッジ、base-ui Select の render function 対応）
+- [x] spec-003: `app/goals/{page, new/page, [id]/edit/page}.tsx` + `app/goals/actions.ts`（Server Action）
+- [x] spec-003: `app/page.tsx` に /goals へのリンクを追加
+- [x] spec-003: chrome-devtools で /goals と /goals/new を視覚確認、Select の label 表示修正
 - [ ] spec-004: `app/actuals/` のページ（一覧 + 新規 + 編集）と ActualForm / ActualTable
 - [ ] spec-004: `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter merge）
 - [ ] spec-004: source='rss' 行は read-only 扱い、フィルタ UI

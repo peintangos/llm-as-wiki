@@ -60,15 +60,16 @@ Feature: Goals management UI
 
 ## Implementation Steps
 
-- [ ] `app/(authed)/goals/` 配下を `app/goals/` に配置（認証レイアウト不要）
-- [ ] `app/goals/page.tsx` — 一覧 + HorizonTabs
-- [ ] `app/goals/new/page.tsx` — 新規作成フォーム
-- [ ] `app/goals/[id]/edit/page.tsx` — 編集フォーム
-- [ ] `components/goals/GoalForm.tsx` — 共通フォーム
-- [ ] `components/goals/GoalCard.tsx` — 一覧行カード
-- [ ] `components/goals/HorizonTabs.tsx` — 4 タブ切り替え
-- [ ] `lib/data/goals.ts` に `writeGoal(goal)` と `deleteGoal(id)` を追加（Server Action から呼ぶ）
-- [ ] `lib/goals/period-defaults.ts` — horizon ごとの period デフォルト util、単体テスト付き
-- [ ] `raw/` に参考資料（Next.js Server Actions、shadcn form 関連）を投下（任意）
-- [ ] `knowledge.md` に観察を記録
-- [ ] Review（`/code-review`）
+- [x] shadcn components を追加（tabs / select / label / textarea / radio-group / badge）
+- [x] `lib/goals/period-defaults.ts` — 日本の年度ベース（4 月起点）で 3yr / 1yr / half / month それぞれの period デフォルト
+- [x] `lib/goals/slug.ts` — `generateGoalId`（`{period}-{horizon}-{4char-random}` 形式）
+- [x] `lib/data/goals.ts` に `writeGoal(goal)` と `deleteGoal(id)` を追加（zod 再検証 + gray-matter stringify + fs.writeFile、undefined キーは除外）
+- [x] `components/goals/HorizonTabs.tsx` — URL-driven（`?tab=<horizon>`）でサーバーサイドフィルタに繋ぐ
+- [x] `components/goals/GoalCard.tsx` — 行動/結果バッジ（Badge variant）、period + metric + target、編集リンク
+- [x] `components/goals/GoalForm.tsx` — 共通フォーム（新規 / 編集）、base-ui Select の render function で label 表示、controlled の horizon / metricKey、useActionState + Server Action
+- [x] `app/goals/page.tsx` — 一覧 + HorizonTabs + filtered + 空状態 UI
+- [x] `app/goals/new/page.tsx` — 新規作成、initialHorizon を `?horizon=` から受ける
+- [x] `app/goals/[id]/edit/page.tsx` — 編集 + 削除ボタン（deleteGoalAction.bind(null, id)）
+- [x] `app/goals/actions.ts` — `upsertGoalAction`（zod 検証、`__none__` を undefined に変換、period 順序チェック、revalidatePath + redirect）と `deleteGoalAction`
+- [x] `app/page.tsx` に /goals へのリンク追加
+- [x] Review: build 成功（静的生成 / / と dynamic /goals を正しく認識）、lint clean、chrome-devtools で視覚確認

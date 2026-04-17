@@ -163,6 +163,38 @@ Phase E 記事の構成に「Supabase はやめた」章を追加する。Karpat
 - `raw/articles/2026-04-17-pivot-from-supabase-to-markdown.md` に詳細な意思決定記録
 - 「Claude に『なんで Supabase が必要なの』と聞かれて答えられなかった」瞬間が記事の clip になる
 
+### 2026-04-17 — base-ui Select の API は radix-based shadcn と異なる（spec-003 で遭遇）
+
+shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-based shadcn との差分:
+
+- **`onValueChange` シグネチャ**: `(value: string) => void` ではなく `(value: string | null, eventDetails) => void`。null を受けうるので handler で `if (!v) return` が必要
+- **`SelectValue` の表示**: children が空だと selected value（生の `"month"` や `"__none__"`）がそのまま表示される。label を出すには render function を渡す:
+
+  ```tsx
+  <SelectValue>
+    {(value) => typeof value === "string" ? LABEL[value] ?? value : ""}
+  </SelectValue>
+  ```
+
+- controlled / uncontrolled の切り替え: `defaultValue` では初期表示の SelectValue render function が値を受け取れず空になる可能性がある。`value` + `onValueChange` + `useState` の controlled パターンが安全
+
+**記事ネタ候補**: 「shadcn の preset（base-nova vs classic）で API が微妙に違う」— LLM の訓練データが古いと radix-based の書き方をしてしまい、deprecation でない"正しい書き方"なのに挙動がズレる。LLM Wiki 的には、shadcn preset ごとに concept ページを分けて記録する必要がある、という知見
+
+### 2026-04-17 — gray-matter の stringify は undefined キーも emit してしまう
+
+`writeGoal` で `matter.stringify(body, frontmatter)` に `target_value: undefined` を含む object を渡すと YAML に `target_value: undefined` と出力されてしまう。
+
+対策: zod parse 後に `Object.fromEntries(Object.entries(fm).filter(([, v]) => v !== undefined))` で undefined を除外してから stringify。
+
+### 2026-04-17 — Server Actions で `redirect` は success path でのみ throw する
+
+`upsertGoalAction` は `useActionState` のシグネチャ `(prev, formData) => Promise<State>` を満たす必要があるが、`redirect()` は内部的に throw する。パターン:
+
+- 失敗時: `return { error: "..." }` で State を返す
+- 成功時: `revalidatePath("/goals")` → `redirect("/goals?tab=...")` を throw（戻り値は未到達なので型は合う）
+
+この「return か throw か」の分岐が Server Actions のクセ。TypeScript の型推論は緩いので、signature は `Promise<{ error?: string } | undefined>` にしてある。
+
 ## LLM Wiki Organic Growth Observations
 
 本 PRD の核心。実開発を通じて LLM Wiki がどう育つかの観察記録。後で記事化する素材。
