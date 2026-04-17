@@ -18,9 +18,47 @@ Supabase / Next.js / Vercel の組み合わせで、忘れやすい接続ポイ�
 
 ## Gotchas
 
-<!--
-ハマりどころ、予期せぬ挙動、「あとで痛い目にあった」ネタ。
--->
+### 2026-04-17 — Next.js 16 が入った（15 ではなく）
+
+`create-next-app@latest` は Next.js 16.2.4 をインストール。PRD と spec は「Next.js 15」と書いていたが、実際は 16 系だった。PRD / spec-001 を「Next.js 16」に修正済み。
+
+- `@base-ui/react` ベースの shadcn（`base-nova` preset）になっており、古い radix-based shadcn とは API が微妙に異なる可能性
+- `lucide-react` が `^1.8.0`（非常に新しい major）— デフォルトで `icon library: lucide` と components.json に記録されるが、旧来の 0.x 系とは import path が違う可能性あり（使うとき注意）
+
+### 2026-04-17 — `create-next-app` が embedded .git を作ってしまう
+
+`npx create-next-app@latest personal-agent` は `personal-agent/.git/` を自動生成する。outer repo（llm-as-wiki）から見ると personal-agent はネストした git リポジトリとみなされ、`git add` すると gitlink（submodule 相当）として staged される。warning: `adding embedded git repository: personal-agent`。
+
+解決:
+
+1. `git rm --cached -f personal-agent`（gitlink を index から外す）
+2. `rm -rf personal-agent/.git`（embedded リポジトリを物理削除）
+3. `git add -A` で個別ファイルとして再追加
+
+この操作後、29 ファイルが personal-agent/ 配下で個別追跡されるようになった。
+
+**記事ネタ候補**: 「モノレポ風にサブディレクトリへ Next.js を置くときの落とし穴」— サブディレクトリの `.git` を残すと submodule 化される。Ralph Matsuo のような docs-first テンプレートでアプリを同居させる際、最初に踏む罠。
+
+### 2026-04-17 — ネストした AGENTS.md / CLAUDE.md
+
+`create-next-app` は `personal-agent/AGENTS.md` と `personal-agent/CLAUDE.md` を自動生成。内容は「この Next.js は breaking change があるので docs/ を確認してから書け」という注意喚起。
+
+- リポジトリ root にも Ralph Matsuo の `AGENTS.md` と `CLAUDE.md` が存在するため、Claude Code から見ると**ネストした指示ファイル**になる
+- ルートと personal-agent/ のどちらが優先されるか、どう解釈されるかは未検証。実装を進めるうちに差分が出たら記録する
+- 記事ネタとして: 「Next.js 16 の自動生成した AGENTS.md が、Ralph Matsuo のものと共存できるかどうか」は重要なエコシステム観察点
+
+### 2026-04-17 — Turbopack root lockfile 警告（未解消、受容）
+
+初回 build で「複数の lockfile を検出したので root を自動選択した」という警告。`/llm-as-wiki/package-lock.json`（Ralph Matsuo 用）と `/llm-as-wiki/personal-agent/package-lock.json` が競合。
+
+試した修正と結果:
+
+1. **試行 1**: `next.config.ts` に `turbopack.root: __dirname`（`fileURLToPath(import.meta.url)` 経由で ESM 風に）→ build が `Failed to load next.config.ts` で失敗
+2. **現状**: `next.config.ts` を空 config に戻し、警告は受け入れる
+
+原因の仮説: Next.js 16 の config loader が `import.meta.url` を含むファイルを CJS として評価しようとして失敗している可能性。より良い解決策は後続 spec で Next.js docs を `raw/` に投下した後に再検討する。build 自体は 3.5 秒で成功するため、実害はない。
+
+**記事ネタ候補**: 「create-next-app@latest + Ralph Matsuo テンプレート（root に package-lock.json がある）の相性問題」— ネスト環境での Next.js 16 のワークスペース推論の挙動
 
 ## LLM Wiki Organic Growth Observations
 
@@ -28,10 +66,7 @@ Supabase / Next.js / Vercel の組み合わせで、忘れやすい接続ポイ�
 
 ### 各 spec 実行中に raw/ に投下した資料
 
-<!--
-spec 別に投下した外部資料をリストする。
-例: spec-001 実装中に raw/articles/2026-04-18-nextjs-15-app-router.md を配置
--->
+- **spec-001（2026-04-17）**: 特になし。scaffold は `npx create-next-app@latest` と `shadcn@latest init -d` の定型操作だけで済んだため外部ドキュメント参照は不要だった。初回の organic growth observation: 「scaffolding 系の spec は raw/ が育たない」という事実自体が次の教訓
 
 ### Ingest で生成された wiki ページの品質
 

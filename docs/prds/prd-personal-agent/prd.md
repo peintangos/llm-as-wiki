@@ -30,7 +30,7 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 
 ### In Scope
 
-- `personal-agent/` サブディレクトリに Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui のアプリを配置
+- `personal-agent/` サブディレクトリに Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui のアプリを配置
 - Supabase 接続（Postgres + Auth + RLS）
 - 4 時間軸の目標管理 UI（3 年 / 1 年 / 半年 / 1 ヶ月）
 - 目標ラベル: 行動目標 / 結果目標
@@ -83,7 +83,7 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 
 ## System Requirements
 
-- **フレームワーク**: Next.js 15 (App Router) + TypeScript
+- **フレームワーク**: Next.js 16 (App Router) + TypeScript + Turbopack
 - **スタイリング**: Tailwind CSS + shadcn/ui
 - **DB / Auth**: Supabase (Postgres + Auth、RLS 必須)
 - **ホスティング**: Vercel
