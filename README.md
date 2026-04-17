@@ -4,6 +4,8 @@
 
 名前は Geoffrey Huntley が広めた "Ralph Wiggum" ループへのオマージュで、壊れやすい会話文脈ではなく、リポジトリ上のファイルを実行の基準に据えるという考え方を表しています。PRD、仕様、依存関係、進捗、todo が次の共通コントロールプレーンになります。
 
+> **このリポジトリ (`llm-as-wiki`) について**：Ralph Matsuo テンプレートをベースにした**実験環境**です。Andrej Karpathy の [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) パターンを spec-driven 開発と組み合わせて運用する試み（`docs/prds/prd-llm-wiki/`）を同梱しています。リポジトリ root の `raw/` と `wiki/`、および `CLAUDE.md` の「LLM Wiki」セクションは本実験のための追加で、本家 Ralph Matsuo テンプレートには含まれません。
+
 - Claude Code スキルによる対話実行
 - `.codex/` ガードレールを通した Codex 実行
 - Ralph Loop によるヘッドレス実行

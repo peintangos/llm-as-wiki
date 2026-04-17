@@ -68,6 +68,8 @@ Use `docs/prds/_template/` as the baseline when creating new PRDs.
 - `docs/references/` — project reference materials (security audits, external research, benchmarks, etc.)
 - `docs/ubiquitous/` — project ubiquitous language dictionary (term definitions shared across the team)
 - `README.md` — public entry point
+- `raw/` — (experimental, scoped to `prd-llm-wiki`) immutable source documents for the LLM Wiki pattern; see `raw/README.md`
+- `wiki/` — (experimental, scoped to `prd-llm-wiki`) LLM-maintained knowledge pages with `index.md` catalog and append-only `log.md`; see `wiki/README.md` and the "LLM Wiki" section below
 
 ### File Roles
 
@@ -80,6 +82,78 @@ Use `docs/prds/_template/` as the baseline when creating new PRDs.
 - **`ralph.toml`**: maps Ralph command roles such as tests, build checks, lint checks, and format fixes to the repository's existing commands
 - **`docs/references/`**: stores reference materials such as security audits, external documentation, research notes, and benchmarks; update when new reference material is obtained or existing material becomes outdated
 - **`docs/ubiquitous/`**: maintains the project's ubiquitous language dictionary; update when new domain terms emerge, existing terms are redefined, or ambiguity is discovered in team communication
+- **`raw/`**: stores immutable source documents for the LLM Wiki pattern. LLM may only read; humans may only write. File naming: `YYYY-MM-DD-slug.md`. Do not edit existing files; add a new dated version instead
+- **`wiki/`**: holds LLM-compiled knowledge pages. Subdirectories: `sources/` (1-to-1 with `raw/`), `entities/`, `concepts/`, `synthesis/`. Keep `index.md` up-to-date as a one-line catalog of every page. Append-only `log.md` records every Ingest / Query / Lint operation as `## [YYYY-MM-DD] operation | title`
+
+## LLM Wiki
+
+This section defines the LLM Wiki schema loaded by Claude Code. The pattern follows Andrej Karpathy's [LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This is an **experimental addition** scoped to this repository (`prd-llm-wiki`); upstream Ralph Matsuo template does not ship it yet.
+
+### Three-Layer Architecture
+
+```text
+┌─────────────────────────────────────────────┐
+│  raw/     — immutable source documents      │  ← human writes, LLM reads
+├─────────────────────────────────────────────┤
+│  wiki/    — LLM-maintained knowledge layer  │  ← LLM writes, human reviews
+├─────────────────────────────────────────────┤
+│  CLAUDE.md (this section) — schema & rules  │  ← co-evolved by both
+└─────────────────────────────────────────────┘
+```
+
+- `raw/` stores immutable originals (articles, gists, papers, transcripts). You never edit existing raw files in place — add a new dated file instead.
+- `wiki/` holds compiled knowledge: `sources/`, `entities/`, `concepts/`, `synthesis/`, plus `index.md` (catalog) and `log.md` (append-only operation log).
+- This section of `CLAUDE.md` defines the operations. Update it when the schema evolves.
+
+### Responsibility Boundary with Spec-Driven Work
+
+- `docs/prds/` is the **delivery scope** control plane — scoped features, specifications, progress tracking.
+- `wiki/` is the **cross-cutting knowledge** plane — persistent, compounding, reference-quality material.
+- `wiki/` pages may cite PRDs for context, but PRDs do not depend on `wiki/` for execution. Do not put delivery-scoped work items (todos, progress, specs) into `wiki/`.
+
+### Ingest
+
+Run Ingest when new files appear under `raw/`. You (Claude Code) execute the following procedure:
+
+1. **Scan** `raw/` and compare against `wiki/sources/`. Identify raw files that do not yet have a corresponding source page.
+2. For each new raw file:
+   1. Read the file in full.
+   2. Write `wiki/sources/{slug}.md` using the template in `wiki/sources/README.md`. Include frontmatter with `source_path` pointing back to `raw/`, and include 3–5 pullquotes from the original.
+   3. Identify **entities** (people, products, organizations) mentioned. For each:
+      - If `wiki/entities/{slug}.md` does not exist, create it per the template in `wiki/entities/README.md`.
+      - If it exists, append new observations and link the new source page.
+   4. Identify **concepts** (methodologies, patterns, definitions). For each:
+      - Create or update `wiki/concepts/{slug}.md` per `wiki/concepts/README.md`.
+      - If multiple sources define the concept differently, record the divergence explicitly rather than silently picking one.
+3. After processing all new raw files, decide whether a **synthesis** page is warranted (e.g., a comparison, mapping, or deep dive across the new sources). If yes, write `wiki/synthesis/{theme-slug}.md` per `wiki/synthesis/README.md`.
+4. Update `wiki/index.md` to reflect every new and updated page with a one-line summary.
+5. Append one entry to `wiki/log.md` in the form `## [YYYY-MM-DD] ingest | {short title}`, listing the number of sources ingested and the number of wiki pages added or updated.
+
+Human role: place the raw sources, decide the theme for any synthesis, review the generated pages, curate clear errors.
+
+### Query
+
+Run Query when the human asks a question against the wiki:
+
+1. Start by reading `wiki/index.md` to locate candidate pages.
+2. Read the relevant pages (`sources/`, `concepts/`, `entities/`, `synthesis/`) in full. Do not rely on summaries alone.
+3. Compose the answer with inline citations. Every claim sourced from the wiki must cite the specific wiki page (and, transitively, the raw original via `source_path`).
+4. If the answer is structurally valuable beyond this one question (a new comparison, mapping, or timeline), save it as a new page under `wiki/synthesis/` and update `wiki/index.md`.
+5. Append one entry to `wiki/log.md` in the form `## [YYYY-MM-DD] query | {question}`, listing the pages cited.
+
+If the query cannot be answered from the existing wiki, say so explicitly and suggest which additional raw sources would be needed. Do not fabricate citations.
+
+### Lint
+
+Run Lint periodically (after several Ingest operations, or on demand):
+
+1. **Contradictions.** Scan `wiki/concepts/` and `wiki/synthesis/` for pages that state conflicting claims. Record each pair.
+2. **Stale claims.** For each `wiki/concepts/*.md`, check whether newer `wiki/sources/` (by `captured_at` or publication date) would update the claim. Flag candidates.
+3. **Orphan pages.** Scan `wiki/` for pages that are not referenced by `wiki/index.md` or by any other wiki page. A page linked only from its own subdirectory's README still counts as an orphan.
+4. **Missing cross-references.** For each entity or concept that appears by name inside another page's body, verify that the mention is wikilinked. Flag missed opportunities.
+5. Produce a report and append one entry to `wiki/log.md` in the form `## [YYYY-MM-DD] lint | summary`, grouped by the four categories above with counts and the first few offenders in each.
+
+Human role: review the report and fix clearly-wrong items. Do not auto-fix contradictions or stale claims — they need human judgment about which source is authoritative.
 
 ## Workflow
 

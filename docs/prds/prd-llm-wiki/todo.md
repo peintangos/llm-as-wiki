@@ -14,10 +14,10 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-002: `./wiki/log.md` 初版を作成（bootstrap エントリ）
 - [x] spec-002: `./wiki/{entities,concepts,sources,synthesis}/` を作成し `.gitkeep` + `README.md` を配置
 - [x] spec-002: `docs/architecture.md` に `wiki/` を追記
-- [ ] spec-003: `CLAUDE.md` に「## LLM Wiki」セクションを追加（Three-Layer Architecture）
-- [ ] spec-003: Ingest / Query / Lint のサブセクションを命令形で記述
-- [ ] spec-003: `## Document System` に raw/ と wiki/ を追加し、spec-driven との責務分離を明記
-- [ ] spec-003: `README.md` overview を 1 段落更新
+- [x] spec-003: `CLAUDE.md` に「## LLM Wiki」セクションを追加（Three-Layer Architecture）
+- [x] spec-003: Ingest / Query / Lint のサブセクションを命令形で記述
+- [x] spec-003: `## Document System` に raw/ と wiki/ を追加し、spec-driven との責務分離を明記
+- [x] spec-003: `README.md` overview を 1 段落更新
 - [ ] spec-004: `raw/` に 10〜15 ソースを配置（Karpathy gist、Vibe Coding 記事、spec-driven 解説など）
 - [ ] spec-004: Ingest を実行し `wiki/sources/`、`wiki/concepts/`、`wiki/entities/`、`wiki/synthesis/` を生成
 - [ ] spec-004: `wiki/index.md` と `wiki/log.md` の反映を確認
