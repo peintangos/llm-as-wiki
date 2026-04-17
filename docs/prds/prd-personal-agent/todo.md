@@ -11,10 +11,15 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-001: minimal "Hello" ページを配置、README 追加
 - [x] spec-001: root `.gitignore` が personal-agent/node_modules などを拾うか確認（OK、personal-agent/ 自身の .gitignore も重ねて効く）
 - [x] spec-001: Vercel link → preview deploy 確認（手動実行完了。Production: https://personal-agent-green.vercel.app）
-- [ ] spec-002: Supabase プロジェクト接続（`.env.local` / `.env.example`）
-- [ ] spec-002: `@supabase/ssr` 導入、client / server / middleware helper 配置
-- [ ] spec-002: migration `0001_init.sql`（goals / metrics / actuals + RLS + metrics seed）
-- [ ] spec-002: Email OTP 有効化、login ページ実装、middleware で未認証時リダイレクト
+- [x] spec-002: `.env.example` を placeholder 付きで作成
+- [ ] spec-002: **ユーザー手動** Supabase プロジェクト作成、`.env.local` に URL と anon key を設定（Vercel 環境変数にも同値を登録）
+- [x] spec-002: `@supabase/ssr` / `@supabase/supabase-js` 導入、client / server / middleware helper 配置
+- [x] spec-002: Next.js 16 の file convention に合わせ `middleware.ts` → `proxy.ts` にリネーム（関数名も `proxy()`）、未認証リダイレクトを実装
+- [x] spec-002: migration `0001_init.sql`（goals / metrics / actuals + RLS + metrics seed）を作成
+- [ ] spec-002: **ユーザー手動** Supabase Dashboard の SQL Editor で `supabase/migrations/0001_init.sql` を実行、または `npx supabase db push`
+- [x] spec-002: login ページ（Email OTP マジックリンク）、auth callback route handler、sign-out 付き Home 更新
+- [ ] spec-002: **ユーザー手動** Supabase Auth で Email provider 有効化、redirect URL に `https://personal-agent-green.vercel.app/auth/callback` と `http://localhost:3000/auth/callback` を追加
+- [ ] spec-002: ユーザーの手動手順完了後、localhost と Vercel preview で magic link 認証フローが動くことを確認
 - [ ] spec-003: `/goals` 一覧ページ + 4 時間軸タブ
 - [ ] spec-003: 新規・編集フォーム（GoalForm 共通化、zod + Server Actions）
 - [ ] spec-003: behavior/outcome バッジ表示、horizon ごとの period デフォルト util

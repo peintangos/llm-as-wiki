@@ -81,16 +81,19 @@ Feature: Supabase schema and auth ready
 
 ## Implementation Steps
 
-- [ ] Supabase プロジェクト（自前の peintangos アカウント）を用意し、URL と anon key を取得
-- [ ] `personal-agent/.env.local` に Supabase 接続情報を設定、`.env.example` をテンプレとしてコミット
-- [ ] `@supabase/supabase-js` と `@supabase/ssr` をインストール
-- [ ] `personal-agent/lib/supabase/{client.ts, server.ts, middleware.ts}` を作成
-- [ ] Supabase CLI を導入（`npx supabase init`）し、`personal-agent/supabase/` を作成
-- [ ] migration `0001_init.sql` を作成: goals / metrics / actuals テーブル定義 + RLS policy + metrics seed data
-- [ ] `npx supabase db push`（or ダッシュボードでの手動実行）で remote に適用
-- [ ] Auth の Email provider を有効化、redirect URL に Vercel preview と localhost を追加
-- [ ] Next.js middleware で未認証時に `/login` へリダイレクト
-- [ ] 簡易ログインページ（Email OTP）を追加
-- [ ] 参照した Supabase ドキュメントを `raw/articles/` に投下（organic growth 観測）
-- [ ] `knowledge.md` に観察を記録
-- [ ] Review（`/code-review`）
+- [ ] **[ユーザー手動]** Supabase プロジェクト（自前の peintangos アカウント）を用意し、URL と anon key を取得
+- [x] `.env.example` を placeholder 付きで作成（`.env.local` はユーザーが埋める）
+- [ ] **[ユーザー手動]** `.env.local` に Supabase 接続情報を設定、Vercel Dashboard にも同値を登録
+- [x] `@supabase/supabase-js` と `@supabase/ssr` をインストール
+- [x] `personal-agent/lib/supabase/{client.ts, server.ts, middleware.ts}` を作成（browser / server / updateSession ヘルパー）
+- [x] `personal-agent/supabase/migrations/` ディレクトリを作成し、`0001_init.sql` を配置（goals / metrics / actuals + RLS + metrics seed data）。Supabase CLI を入れる代わりに migration ファイルだけを手動管理する方針
+- [ ] **[ユーザー手動]** Supabase Dashboard の SQL Editor で `0001_init.sql` を実行、または `npx supabase db push`
+- [ ] **[ユーザー手動]** Auth の Email provider を有効化、redirect URL に Vercel preview と localhost を追加
+- [x] Next.js 16 の file convention に沿って `middleware.ts` → `proxy.ts` にリネーム（関数名も `proxy()`）、未認証リダイレクトを `/login` に実装
+- [x] 簡易ログインページ（Email OTP マジックリンク送信フォーム）を `/login` に追加
+- [x] `/auth/callback` の route handler を追加（`exchangeCodeForSession` でマジックリンクを処理）
+- [x] Home (`/`) を更新し、認証済みなら email を表示 + sign-out ボタン、未認証なら `/login` に redirect
+- [x] 参照した Supabase SSR パターンと Next.js 16 middleware-to-proxy 移行 docs を `raw/articles/` に投下（organic growth 観測）
+- [x] `knowledge.md` に観察を記録（middleware→proxy リネーム、@supabase/ssr の getAll/setAll 新 API、docs fetch が summary のみ返す挙動）
+- [x] Self-review: build 成功（Turbopack、警告ゼロ）、lint clean
+- [ ] **[ユーザー手動]** 手動手順完了後、localhost と Vercel preview で magic link 認証フローが動くことを確認

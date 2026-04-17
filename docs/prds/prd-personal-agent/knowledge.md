@@ -68,6 +68,49 @@ Supabase / Next.js / Vercel の組み合わせで、忘れやすい接続ポイ�
 
 **記事ネタ候補**: 「create-next-app@latest + Ralph Matsuo テンプレート（root に package-lock.json がある）の相性問題」— ネスト環境での Next.js 16 のワークスペース推論の挙動
 
+### 2026-04-17 — Next.js 16 `middleware` が `proxy` にリネームされた（spec-002 で遭遇）
+
+`@supabase/ssr` の推奨配置で `personal-agent/middleware.ts` を作って build したら deprecation 警告:
+
+> The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+Next.js 16 で以下がリネームされた:
+
+| 旧 | 新 |
+|-----|-----|
+| `middleware.ts` | `proxy.ts` |
+| `export function middleware()` | `export function proxy()` |
+| `config.matcher` | 変更なし |
+
+公式の理由:
+
+- Express.js の middleware と混同されやすい
+- "highly capable" すぎて濫用されがちだった（最後の手段として使うべき機能）
+- "Proxy" はネットワーク境界性と Edge Runtime での動作を正しく表す
+
+詳細は `raw/articles/2026-04-17-nextjs-16-middleware-to-proxy.md` を参照。
+
+**記事ネタ候補**: 「Next.js 16 のこの rename は、技術的には小さな変更だが思想的には大きい。"middleware" は Express 的濫用を招くので "proxy" に名前を変えて最後の手段として格下げした」という API 設計哲学の話が書ける。
+
+### 2026-04-17 — Supabase 公式 docs が WebFetch で summary しか返さなかった
+
+`https://supabase.com/docs/guides/auth/server-side/nextjs` を WebFetch したところ、完全なコード block が返らず「documentation directs you to copy the lib utility functions」という summary が返ってきた。JavaScript の多い SPA 型ドキュメントサイトは WebFetch に弱い。
+
+対策:
+
+- peintangos の作業知識（Jan 2026 cutoff 内）で `@supabase/ssr` の確立パターンを書いた
+- `raw/articles/2026-04-17-supabase-ssr-nextjs-notes.md` に peintangos 要約を配置（原典そのものではなく二次資料扱い）
+- Next.js 16 の middleware-to-proxy は素直な docs ページだったのでフル fetch できた。この差は SPA vs SSR な docs 配信の差
+
+**記事ネタ候補**: 「LLM Wiki に取り込むときの一次資料と二次資料」— 原典が SPA で取れないとき、Ingest 側で要約を作って二次資料として配置する運用。Karpathy の raw/ 原則と完全一致とは言えない変則だが、現実運用では必須。
+
+### 2026-04-17 — Supabase `@supabase/ssr` は getAll/setAll のペアに単純化されている
+
+旧 `@supabase/auth-helpers-nextjs` では `get`/`set`/`remove` の 3 メソッドが必要だったが、`@supabase/ssr` では getAll と setAll の 2 つに統一された。cookie を配列で一括管理するほうが forward の正確性が上がる。
+
+- Server Component の文脈で setAll を呼ぶと throw する（Next.js の制約）→ try/catch で握りつぶす
+- Middleware（proxy）側で setAll が動くので、Server Component での throw は無害
+
 ## LLM Wiki Organic Growth Observations
 
 本 PRD の核心。実開発を通じて LLM Wiki がどう育つかの観察記録。後で記事化する素材。
@@ -75,6 +118,10 @@ Supabase / Next.js / Vercel の組み合わせで、忘れやすい接続ポイ�
 ### 各 spec 実行中に raw/ に投下した資料
 
 - **spec-001（2026-04-17）**: 特になし。scaffold は `npx create-next-app@latest` と `shadcn@latest init -d` の定型操作だけで済んだため外部ドキュメント参照は不要だった。初回の organic growth observation: 「scaffolding 系の spec は raw/ が育たない」という事実自体が次の教訓
+- **spec-002（2026-04-17）**: 2 件投下
+  - `raw/articles/2026-04-17-supabase-ssr-nextjs-notes.md` — Supabase の `@supabase/ssr` + Next.js App Router の確立パターン要約（docs fetch が summary しか返さなかったので二次資料として配置）
+  - `raw/articles/2026-04-17-nextjs-16-middleware-to-proxy.md` — Next.js 16 の `middleware` → `proxy` リネーム docs の抜粋。Next.js 公式 docs は完全 fetch できた
+  - organic growth observation: **「コードを書く spec で初めて raw/ が育ち始めた」**。spec-001（scaffold）では外部資料参照不要だった contrast が鮮明。Karpathy パターンが活性化するのは spec-002 以降と体感できた
 
 ### Ingest で生成された wiki ページの品質
 
