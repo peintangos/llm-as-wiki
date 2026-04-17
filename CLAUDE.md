@@ -155,6 +155,19 @@ Run Lint periodically (after several Ingest operations, or on demand):
 
 Human role: review the report and fix clearly-wrong items. Do not auto-fix contradictions or stale claims — they need human judgment about which source is authoritative.
 
+### When to trigger Ingest
+
+Observed in this repository (2026-04-17): **Ingest does not self-fire**. Writing "Run Ingest when new files appear" is insufficient because no actor actively polls. If you are in "spec implementation mode", you will not return to "curator mode" on your own, and the wiki will stall.
+
+Explicit triggers, in priority order:
+
+1. **At the end of `/implement`** — after a spec is marked done, before `/commit-push`, run Ingest if any new files under `raw/` have appeared since the previous Ingest (check `wiki/log.md` for the last `ingest` entry).
+2. **When the human explicitly asks** — "ingest", "wiki 育てて", "log に残して", "raw を整理" などの指示を受けたとき.
+3. **At session close** — `/catchup` の逆として、セッション終わりに raw/ の未整理分を Ingest する.
+4. **When the human observes stagnation** — "wiki が育たない" などの指摘を受けたとき（本リポジトリでの initial Ingest trigger はこれだった）.
+
+The `observation-triggered` mode is load-bearing — treat a user's "wiki 育たないね" as a first-class Ingest trigger, not as a casual observation.
+
 ## Workflow
 
 ### Session Start

@@ -195,6 +195,31 @@ shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-b
 
 この「return か throw か」の分岐が Server Actions のクセ。TypeScript の型推論は緩いので、signature は `Promise<{ error?: string } | undefined>` にしてある。
 
+### 2026-04-17 — initial Ingest は **observation-triggered** だった（重要）
+
+spec-001〜003 完走の後、peintangos から「なかなか compile しないのね / wiki, raw が育たない」と指摘されて初めて、wiki/ の初回 Ingest を実行した。
+
+**観察:**
+
+- 現 CLAUDE.md の LLM Wiki セクションは "Run Ingest **when** new files appear under `raw/`" と書いていた
+- 書き手（peintangos）が "when" を判断するかと思いきや、**Claude（俺）も書き手もどちらも when を判定していなかった**
+- 俺は spec 実装モードに入ると curator モードに戻らず、raw/ に資料を投下しても wiki/ 生成の起動を忘れる
+- wiki/ は 2 週間近く空のまま（scaffolding 以後ゼロ）だった可能性がある
+
+**対策として実施:**
+
+1. **initial Ingest を走らせた** — 15 wiki ページを生成（3 sources / 5 concepts / 3 entities / 2 syntheses + index + log entry）
+2. **CLAUDE.md に "When to trigger Ingest" セクションを追記** — 4 種のトリガー（spec 完了時 / ユーザー要求時 / セッション終了時 / ユーザーの stagnation 指摘時）を明示
+3. **observation-triggered を first-class trigger として位置づけた** — 「wiki 育たないね」を casual comment ではなく動作命令として扱う
+
+**記事ネタとして核心 — Phase E 記事の 5 章（仮）:**
+
+> "Karpathy の LLM Wiki は自動で育たない — 誰も Ingest を呼ばない"
+>
+> 原典には "when new files appear" とだけあり、トリガーの実装は読者任せになっている。個人運用なら自然に思い出すかもしれないが、spec-driven で Claude Code を回している環境では、Claude は実装モードに入ると curator モードに戻れない。2 週間近く wiki が空のまま放置されていたのを peintangos が「compile しないのね」と口にして初めて気づいた。
+>
+> これを受けて、CLAUDE.md に明示的なトリガー条項を追加した。**「ユーザーの停滞指摘を first-class trigger として扱う」** を Ingest の定義に組み込んだ。Karpathy の原典を spec-driven に接続するとき、この一行の追加が最も効いた修正だった。
+
 ## LLM Wiki Organic Growth Observations
 
 本 PRD の核心。実開発を通じて LLM Wiki がどう育つかの観察記録。後で記事化する素材。
