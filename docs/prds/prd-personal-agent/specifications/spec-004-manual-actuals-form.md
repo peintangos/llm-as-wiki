@@ -2,7 +2,7 @@
 
 ## Overview
 
-自動取得できないメトリクス（X ポスト数、社長アポ数、イベント出席数、商談成功数）を手入力するフォームを作る。日別または月別で数量を記録でき、編集・削除もできる。`source='manual'` として `actuals` テーブルに保存する。
+自動取得できないメトリクス（X ポスト数、社長アポ数、イベント出席数、商談成功数）を手入力するフォームを作る。データ層は `data/actuals/{yyyy-mm-dd}.md`。Server Action が `lib/data/actuals.ts` の writeDayActuals helper 経由で markdown を書き換える（frontmatter の metrics と sources を merge、source='manual' を記録）。
 
 ## Acceptance Criteria
 
@@ -10,31 +10,26 @@
 Feature: Manual actuals entry form
 
   Background:
-    spec-002 で actuals テーブルは定義済み
-    spec-003 と並行 or 前後して実装可能
+    spec-002 で data/actuals/ と lib/data/actuals.ts は準備済み
+    spec-003 と並行または前後して実装可能
 
   Scenario: 実績入力ページが存在する
-    Given 認証済みユーザー
-    When /actuals/new へアクセスする
+    Given /actuals/new
+    When アクセスする
     Then フォームが表示され以下を入力できる:
       | field |
       | metric_key (select: x_posts / meetings / events / deals) |
       | value (正の数) |
       | recorded_date (default: 今日) |
-      | note (任意) |
-    And 保存すると actuals テーブルに INSERT され source='manual' が自動で入る
-
-  Scenario: 月別集計の入力もできる
-    Given 新規フォーム
-    When 「月別入力モード」を切り替える
-    Then recorded_date は「月初日」に自動セット
-    And 1 レコードで 1 ヶ月分の数量を記録できる
+      | note (任意、本文として markdown body に追記) |
+    And 保存すると `data/actuals/{recorded_date}.md` に対して:
+      - 既存ファイルがあれば frontmatter の metrics[metric_key] を上書き、sources[metric_key]='manual' を記録、body は note を append
+      - なければ `zeroedDayActuals` で初期化してから上書き
 
   Scenario: 実績一覧で編集・削除できる
     Given /actuals ページ
-    When 一覧から過去の手入力実績の行をクリック
-    Then 編集フォームが開き UPDATE できる
-    And 削除ボタンで DELETE できる（確認ダイアログあり）
+    When 一覧から過去の手入力行の「編集」「削除」を押す
+    Then 編集は同フォームが開いて markdown を上書き、削除は確認ダイアログ後、該当日の該当メトリクスを 0 に戻す（ファイル全削除はしない、他メトリクスが残っているので）
 
   Scenario: 実績一覧がフィルタできる
     Given /actuals ページ
@@ -42,20 +37,26 @@ Feature: Manual actuals entry form
     Then 該当実績のみ表示される
 
   Scenario: RSS 由来の実績は手入力側で編集できない
-    Given source='rss' の actuals
+    Given source='rss' の行
     When /actuals 一覧で表示される
     Then 行には「自動取得」バッジが付く
-    And 編集・削除ボタンは非表示（or disabled）
+    And 編集・削除ボタンは非表示 or disabled
+
+  Scenario: 月別入力モード
+    Given 新規フォーム
+    When 「月別入力モード」を切り替える
+    Then recorded_date は当月 1 日に自動セット
+    And 1 操作で当月分の数量として記録される（代表日 = 月初）
 ```
 
 ## Implementation Steps
 
-- [ ] `personal-agent/app/(authed)/actuals/page.tsx` — 実績一覧
-- [ ] `personal-agent/app/(authed)/actuals/new/page.tsx` — 新規入力
-- [ ] `personal-agent/app/(authed)/actuals/[id]/edit/page.tsx` — 編集
-- [ ] `personal-agent/components/actuals/ActualForm.tsx` — フォーム
-- [ ] `personal-agent/components/actuals/ActualTable.tsx` — 一覧
-- [ ] `personal-agent/lib/actuals/{schema.ts, queries.ts, actions.ts}` — zod schema、Supabase クエリ、Server Actions
+- [ ] `app/actuals/page.tsx` — 一覧
+- [ ] `app/actuals/new/page.tsx` — 新規入力
+- [ ] `app/actuals/[date]/[metric]/edit/page.tsx` — 編集（date + metric で行を特定）
+- [ ] `components/actuals/ActualForm.tsx` — フォーム
+- [ ] `components/actuals/ActualTable.tsx` — 一覧
+- [ ] `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter を merge、既存ファイルがなければ zeroedDayActuals で初期化）
 - [ ] フィルタ UI（metric_key select + 日付レンジ）
 - [ ] source='rss' の行は read-only 扱い
 - [ ] `knowledge.md` に観察を記録

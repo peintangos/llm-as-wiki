@@ -111,6 +111,58 @@ Next.js 16 で以下がリネームされた:
 - Server Component の文脈で setAll を呼ぶと throw する（Next.js の制約）→ try/catch で握りつぶす
 - Middleware（proxy）側で setAll が動くので、Server Component での throw は無害
 
+### 2026-04-17 — spec-002 で Supabase から markdown データ層にピボット（最重要）
+
+spec-002 で Supabase（Postgres + Auth + RLS）のコード側を配置した直後、peintangos から「そもそもなぜ Supabase が必要なの？」と問われ、答えられなかった。
+
+**剥がした前提:**
+
+1. 「Web アプリ = Auth + DB が要る」という Web 業界の慣習前提
+2. 「複数ユーザー想定」（実際は peintangos 本人のみ）
+3. 「スマホから編集する可能性」（実際はローカル開発主体、Vercel は snapshot 閲覧用）
+
+**選んだ代替案**: Option A — ローカル + markdown データ層
+
+- `personal-agent/data/goals/{id}.md`（1 目標 = 1 ファイル）
+- `personal-agent/data/actuals/{yyyy-mm-dd}.md`（1 日 = 1 ファイル、frontmatter に 6 メトリクス + sources）
+- `lib/data/{schema.ts, goals.ts, actuals.ts}` に zod スキーマと read ヘルパー
+- 書き込みは Server Action が `fs` で（ローカルのみ）
+- 認証・RLS・migration・environment variables すべて不要
+
+**削除したもの（30 分で剥がせた）:**
+
+- `@supabase/ssr`、`@supabase/supabase-js` 依存
+- `lib/supabase/`
+- `proxy.ts`（Next.js 16 の middleware リネーム対応、もう不要）
+- `app/login/page.tsx`、`app/auth/callback/route.ts`
+- `supabase/migrations/0001_init.sql`
+- `.env.example`
+
+**残したもの（すべて価値がある）:**
+
+- Next.js 16 基盤・shadcn/ui・Hello ページの型
+- Vercel 接続（静的 export で read-only snapshot として活きる）
+- `raw/articles/2026-04-17-nextjs-16-middleware-to-proxy.md`（知識として有効）
+
+**教訓:**
+
+- **Claude に指摘されて無意識の前提を剥がすのは LLM Wiki 思想そのもの** — wiki を compile するときの「この claim の根拠は？」と同じ問い
+- **単一ユーザーツールに Web 業界慣習を持ち込むと過剰設計**。身の丈に合った選択肢を最初から検討すべきだった
+- **データ形式は LLM との協働を想定すべき時代** — markdown を選ぶと Personal Agent が後で楽をする（raw/ や wiki/ と同じ方法で読める）
+- **sunk cost は諦める**。1 時間の作業を惜しむより、開発全体を汚染しないほうが優先
+
+**技術的 gotcha:**
+
+- `gray-matter` は YAML の `date` リテラル（`2026-04-17`）を JS Date オブジェクトに変換する → zod schema で `z.preprocess` を使って string に戻す必要がある
+- Next.js 16 で `middleware.ts` は `proxy.ts` にリネームされた（spec-002 のピボットで結果的にどちらも不要になったが）
+
+**記事ネタとして核心:**
+
+Phase E 記事の構成に「Supabase はやめた」章を追加する。Karpathy の LLM Wiki が「wiki に整理させる」だけでなく、**データ層そのものを markdown にする**方向に拡張できることを実証する例。**計画と現実のズレ、そして実装中の方針転換がそのまま記事の山場になる**。
+
+- `raw/articles/2026-04-17-pivot-from-supabase-to-markdown.md` に詳細な意思決定記録
+- 「Claude に『なんで Supabase が必要なの』と聞かれて答えられなかった」瞬間が記事の clip になる
+
 ## LLM Wiki Organic Growth Observations
 
 本 PRD の核心。実開発を通じて LLM Wiki がどう育つかの観察記録。後で記事化する素材。

@@ -6,35 +6,32 @@ Each unchecked task should be small enough to complete in one `/implement` run o
 Mark completed tasks with `- [x]` instead of removing them.
 -->
 
-- [x] spec-001: `personal-agent/` に Next.js 16 (App Router) + TS + Tailwind + shadcn/ui を scaffold（Next.js 15 想定→実際は 16 がインストールされた）
-- [x] spec-001: shadcn/ui の button / card / input を導入（`base-nova` preset）
-- [x] spec-001: minimal "Hello" ページを配置、README 追加
-- [x] spec-001: root `.gitignore` が personal-agent/node_modules などを拾うか確認（OK、personal-agent/ 自身の .gitignore も重ねて効く）
-- [x] spec-001: Vercel link → preview deploy 確認（手動実行完了。Production: https://personal-agent-green.vercel.app）
-- [x] spec-002: `.env.example` を placeholder 付きで作成
-- [ ] spec-002: **ユーザー手動** Supabase プロジェクト作成、`.env.local` に URL と anon key を設定（Vercel 環境変数にも同値を登録）
-- [x] spec-002: `@supabase/ssr` / `@supabase/supabase-js` 導入、client / server / middleware helper 配置
-- [x] spec-002: Next.js 16 の file convention に合わせ `middleware.ts` → `proxy.ts` にリネーム（関数名も `proxy()`）、未認証リダイレクトを実装
-- [x] spec-002: migration `0001_init.sql`（goals / metrics / actuals + RLS + metrics seed）を作成
-- [ ] spec-002: **ユーザー手動** Supabase Dashboard の SQL Editor で `supabase/migrations/0001_init.sql` を実行、または `npx supabase db push`
-- [x] spec-002: login ページ（Email OTP マジックリンク）、auth callback route handler、sign-out 付き Home 更新
-- [ ] spec-002: **ユーザー手動** Supabase Auth で Email provider 有効化、redirect URL に `https://personal-agent-green.vercel.app/auth/callback` と `http://localhost:3000/auth/callback` を追加
-- [ ] spec-002: ユーザーの手動手順完了後、localhost と Vercel preview で magic link 認証フローが動くことを確認
-- [ ] spec-003: `/goals` 一覧ページ + 4 時間軸タブ
-- [ ] spec-003: 新規・編集フォーム（GoalForm 共通化、zod + Server Actions）
-- [ ] spec-003: behavior/outcome バッジ表示、horizon ごとの period デフォルト util
-- [ ] spec-004: `/actuals` 一覧 + 入力 + 編集（ActualForm、zod + Server Actions）
-- [ ] spec-004: 月別モード切り替え、フィルタ UI（metric_key + 日付レンジ）
-- [ ] spec-004: source='rss' は read-only 扱い
-- [ ] spec-005: `/api/cron/rss-ingest` Route Handler、CRON_SECRET 検証
-- [ ] spec-005: note RSS → `metric_key='note_count'` で upsert
-- [ ] spec-005: Zenn RSS → `metric_key='zenn_count'` で upsert
-- [ ] spec-005: `vercel.json` に crons 設定、deploy 後に動作確認
-- [ ] spec-006: トップページ = ダッシュボード化、HorizonTabs 実装
+- [x] spec-001: `personal-agent/` に Next.js 16 + TS + Tailwind + shadcn/ui を scaffold
+- [x] spec-001: shadcn/ui の button / card / input を導入
+- [x] spec-001: minimal Hello ページを配置、README 追加
+- [x] spec-001: root `.gitignore` の検証
+- [x] spec-001: Vercel link → preview deploy 確認
+- [x] spec-002: Supabase から markdown データ層にピボット決定（2026-04-17）
+- [x] spec-002: `@supabase/*` 依存を uninstall、`gray-matter` + `zod` を install
+- [x] spec-002: supabase 関連のソースを全削除（lib/supabase、proxy.ts、login、auth callback、supabase/migrations、.env.example）
+- [x] spec-002: `lib/data/{schema.ts, goals.ts, actuals.ts}` を配置、YAML 日付 Date → string preprocess
+- [x] spec-002: `data/README.md` + サンプル seed（1 goal + 1 day actuals）
+- [x] spec-002: `app/page.tsx` を data/ 読み込みの Server Component に更新
+- [x] spec-002: build 成功（静的生成、warning なし）
+- [x] spec-002: ピボット意思決定記録を `raw/articles/` に投下、`knowledge.md` に詳細追記
+- [ ] spec-003: `app/goals/` のページ 3 種（一覧 / 新規 / 編集）と GoalForm / GoalCard / HorizonTabs コンポーネント
+- [ ] spec-003: `lib/data/goals.ts` に `writeGoal` / `deleteGoal` を追加（Server Action から呼ぶ）
+- [ ] spec-003: horizon ごとの period デフォルト util とテスト
+- [ ] spec-003: behavior/outcome バッジ表示
+- [ ] spec-004: `app/actuals/` のページ（一覧 + 新規 + 編集）と ActualForm / ActualTable
+- [ ] spec-004: `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter merge）
+- [ ] spec-004: source='rss' 行は read-only 扱い、フィルタ UI
+- [ ] spec-005: `scripts/rss-ingest.ts`（note + Zenn RSS fetch）
+- [ ] spec-005: `lib/rss/` に fetchFeedItemCount util + テスト
+- [ ] spec-005: package.json に `rss-ingest` スクリプト、launchd / cron 設定例を README に記載
+- [ ] spec-006: トップページ = ダッシュボード化、HorizonTabs 統合
 - [ ] spec-006: GoalProgressCard（進捗率計算 util + プログレスバー）
-- [ ] spec-006: ActualsChart（Recharts）、空状態 UI
-- [ ] spec-006: URL クエリ `?tab=<horizon>` と UI 同期
-- [ ] spec-007: `business_plans` テーブル追加、RLS policy（本人書き込み + share_token 読み取り）
-- [ ] spec-007: `/business-plan`（本人用）と `/share/plan/[token]`（公開）の 2 ページ実装
-- [ ] spec-007: Google Slides 埋め込みコンポーネント + pptx ダウンロード両対応
-- [ ] spec-007: 共有トークン発行 / 失効フロー、ダッシュボードにナビリンク
+- [ ] spec-006: ActualsChart（Recharts）、空状態 UI、URL クエリ `?tab=<horizon>` と UI 同期
+- [ ] spec-007: `data/business-plan.md` テンプレ + `lib/data/business-plan.ts` reader
+- [ ] spec-007: `app/business-plan/page.tsx`（iframe 埋め込み + markdown メモ表示）
+- [ ] spec-007: dashboard に「事業計画を見る」ナビリンク、URL 未設定時の空状態 UI

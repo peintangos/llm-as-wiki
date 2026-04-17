@@ -1,6 +1,6 @@
 # personal-agent/
 
-`llm-as-wiki` リポジトリの `prd-personal-agent` PRD の成果物として、peintangos の **目標と実績を可視化するダッシュボード** を構築する Next.js アプリ。最終ゴールは Personal Agent（LLM Wiki を知識層に持つ AI エージェント）。MVP ではまず可視化層のみを作る。
+`llm-as-wiki` リポジトリの `prd-personal-agent` PRD の成果物として、peintangos の **目標と実績を可視化するダッシュボード** を構築する Next.js アプリ。最終ゴールは Personal Agent（LLM Wiki を知識層に持つ AI エージェント）。
 
 ## Stack
 
@@ -8,9 +8,12 @@
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **UI components**: shadcn/ui（`base-nova` preset、`@base-ui/react` ベース）
-- **DB / Auth**: Supabase（spec-002 で導入予定）
-- **Hosting**: Vercel
-- **Cron**: Vercel Cron（spec-005 で RSS 自動取得ジョブを配置予定）
+- **データ層**: **markdown ファイル**（`data/goals/*.md`、`data/actuals/{yyyy-mm-dd}.md`）
+- **Parser**: gray-matter（frontmatter）、zod（スキーマ検証）
+- **認証**: なし（単一ユーザー、ローカル運用、リポジトリアクセスが authn 相当）
+- **Hosting**: Vercel（静的 snapshot として配信、書き込みは無効）
+
+当初 Supabase（Postgres + Auth + RLS）前提で scaffold したが、単一ユーザーに過剰と判断し 2026-04-17 に markdown データ層へピボット。詳細: `../docs/prds/prd-personal-agent/knowledge.md` と `../raw/articles/2026-04-17-pivot-from-supabase-to-markdown.md`。
 
 ## Getting Started
 
@@ -20,7 +23,16 @@ npm install              # 初回のみ
 npm run dev              # http://localhost:3000
 ```
 
-開発サーバは Turbopack で動く。hot reload は page.tsx 等を編集すれば自動で反映される。
+開発サーバは Turbopack で動く。`data/` 配下の markdown を編集すると reload で即反映。
+
+## 運用モード
+
+| モード | 書き込み | 読み込み |
+|--------|---------|----------|
+| ローカル `npm run dev` | ○（Server Action が fs 経由で markdown を書き換える） | ○ |
+| Vercel 本番 | ×（ephemeral fs、永続化しない） | ○（build 時の snapshot） |
+
+データ更新フロー: ローカルで `npm run dev` → フォーム経由 or markdown 直編集 → git commit + push → Vercel が自動 redeploy → snapshot 更新。
 
 ## Project Structure
 
@@ -28,17 +40,25 @@ npm run dev              # http://localhost:3000
 personal-agent/
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx         # MVP: Hello ページ（以降の spec でダッシュボードに置換）
-│   └── globals.css      # Tailwind v4 + shadcn CSS variables
+│   ├── page.tsx             # ダッシュボード入口（spec-006 で置換予定）
+│   └── globals.css
 ├── components/
-│   └── ui/              # shadcn/ui（button / card / input）
+│   └── ui/                  # shadcn/ui (button / card / input)
 ├── lib/
-│   └── utils.ts         # cn() など
-├── public/              # 静的アセット
-├── components.json      # shadcn 設定
-├── next.config.ts       # Turbopack root を本ディレクトリに固定
-├── AGENTS.md            # Next.js 16 由来の注意喚起（Claude への指示）
-├── CLAUDE.md            # AGENTS.md を参照
+│   ├── data/
+│   │   ├── schema.ts        # zod schemas, METRIC_KEYS, HORIZONS
+│   │   ├── goals.ts         # listGoals, getGoal
+│   │   └── actuals.ts       # listDayActuals, getDayActuals, sumByMetric
+│   └── utils.ts             # cn() など
+├── data/                    # markdown データ層（本アプリの DB 相当）
+│   ├── README.md            # 運用ルール・ファイル形式・メトリクス語彙
+│   ├── goals/{id}.md
+│   └── actuals/{yyyy-mm-dd}.md
+├── public/
+├── components.json
+├── next.config.ts
+├── AGENTS.md                # Next.js 16 由来の注意喚起
+├── CLAUDE.md                # AGENTS.md 参照
 ├── tsconfig.json
 └── package.json
 ```
@@ -47,12 +67,12 @@ personal-agent/
 
 - `../docs/prds/prd-personal-agent/prd.md` — PRD 本体
 - `../docs/prds/prd-personal-agent/specifications/` — 7 specs
-- `../CLAUDE.md` — リポジトリ全体の規約（LLM Wiki セクション含む）
-- `AGENTS.md` — Next.js 16 の注意喚起（この版は breaking change あり、`node_modules/next/dist/docs/` も確認）
+- `../CLAUDE.md` — リポジトリ全体の規約（LLM Wiki セクションも参照）
+- `data/README.md` — データ層の運用ルール
 
 ## LLM Wiki との関係
 
-本アプリは将来、リポジトリ root の `../wiki/` を知識層として参照する Personal Agent に育つ予定。現段階では可視化のみだが、開発中に参照した外部資料は `../raw/` に投下し、`../wiki/` が organic に育つ過程を `../docs/prds/prd-personal-agent/knowledge.md` に記録する。
+`../raw/`（外部資料）・`../wiki/`（LLM 整理の二次資料）・`personal-agent/data/`（本人のログ）の 3 階層すべてが markdown。Personal Agent は将来、この 3 つを区別なく読む設計。
 
 ## Deploy
 
@@ -60,11 +80,7 @@ personal-agent/
 - Vercel に link 済み。`ralph/personal-agent` ブランチへの push で preview deploy、`main` へのマージで production deploy が自動実行される。
 
 ```bash
-# 初回 link（完了済み。環境を再作成するとき以外は不要）
+# 初回 link（完了済み）
 cd personal-agent
 npx vercel link
 ```
-
-## ワークスペース注記
-
-リポジトリ root (`/llm-as-wiki`) には Ralph Matsuo 用の `package-lock.json` が別途存在する。Next.js の Turbopack は `npm run build` 時に「multiple lockfiles を検出した」という警告を出すが、動作には影響しない。`next.config.ts` で `turbopack.root` を設定すれば警告は消えるが、`import.meta.url` 経由のパス解決が build に失敗するケースがあり、現状は警告を受け入れている（詳細: `../docs/prds/prd-personal-agent/knowledge.md` の Gotchas 参照）。

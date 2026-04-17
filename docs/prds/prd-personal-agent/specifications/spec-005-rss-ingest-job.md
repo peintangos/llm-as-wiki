@@ -1,71 +1,61 @@
-# spec-005: RSS 自動取得（note / Zenn）を Vercel Cron で日次実行
+# spec-005: RSS 自動取得（note / Zenn）を data/actuals に反映する
 
 ## Overview
 
-note (`https://note.com/{user}/rss`) と Zenn (`https://zenn.dev/{user}/feed`) の RSS を日次で取得し、記事数を `actuals` テーブルに `source='rss'` として記録するジョブを作る。Vercel Cron から叩く Next.js Route Handler として実装する。
+note (`https://note.com/{user}/rss`) と Zenn (`https://zenn.dev/{user}/feed`) の RSS を取得し、記事数を `data/actuals/{today}.md` の frontmatter に `source='rss'` で書き込む。**Vercel Cron は使わない**（本番は read-only snapshot のため書き込みが永続化しない）。代わりに **ローカル実行の node スクリプト**として配置し、peintangos が手動 or macOS の launchd / cron で走らせる。結果は git commit + push で Vercel snapshot に反映される。
 
 ## Acceptance Criteria
 
 ```gherkin
-Feature: RSS-driven actuals ingestion
+Feature: RSS ingestion into data/actuals/ markdown
 
   Background:
-    spec-002 で actuals スキーマは準備済み
-    note と Zenn のユーザー名は .env で設定する
+    spec-002 で data/actuals/ と lib/data/actuals.ts は準備済み
+    note と Zenn のユーザー名は scripts の引数 or .env で指定
 
-  Scenario: RSS fetch エンドポイントが存在する
+  Scenario: node スクリプトが存在する
     Given personal-agent/
-    When app/api/cron/rss-ingest/route.ts を確認する
-    Then GET ハンドラが定義されている
-    And 認証は Vercel Cron の Authorization ヘッダで検証される（CRON_SECRET 経由）
+    When scripts/rss-ingest.ts（or .mjs）を確認する
+    Then tsx or node で直接実行できる
+    And 入力は NOTE_USERNAME と ZENN_USERNAME（環境変数 or argv）
+    And 実行すると data/actuals/{today}.md の metrics.note_count と metrics.zenn_count を RSS の記事数で上書き、sources.note_count と sources.zenn_count を 'rss' に設定
 
-  Scenario: note の RSS から記事数を取得し actuals に記録する
-    Given NOTE_USERNAME が .env に設定されている
-    When エンドポイントを叩く
-    Then https://note.com/{NOTE_USERNAME}/rss を取得
-    And フィードの item 数をカウント
-    And actuals テーブルに以下で upsert する:
-      | metric_key='note_count' |
-      | value=<item 数> |
-      | recorded_date=<今日> |
-      | source='rss' |
-      | owner_id=<サービスロール経由の peintangos user id> |
-    And 同日同メトリクスの既存レコードがあれば UPDATE、なければ INSERT
+  Scenario: note の RSS から記事数を取得
+    Given NOTE_USERNAME が設定されている
+    When スクリプトを実行
+    Then https://note.com/{NOTE_USERNAME}/rss を fetch
+    And フィードの item 数を数える
+    And data/actuals/{today}.md を upsert（既存ファイルがなければ zeroedDayActuals で初期化）
 
-  Scenario: Zenn の RSS でも同様
-    Given ZENN_USERNAME が .env に設定されている
-    When エンドポイントを叩く
-    Then https://zenn.dev/{ZENN_USERNAME}/feed を取得し、metric_key='zenn_count' で upsert
-
-  Scenario: Vercel Cron が日次実行する
-    Given personal-agent/vercel.json
-    When crons フィールドを確認する
-    Then schedule='0 3 * * *' (JST 正午相当) 等で api/cron/rss-ingest にヒットする設定がある
+  Scenario: Zenn の RSS から記事数を取得
+    Given ZENN_USERNAME が設定されている
+    When スクリプトを実行
+    Then https://zenn.dev/{ZENN_USERNAME}/feed を fetch
+    And フィードの item 数を数え、metric_key='zenn_count' で markdown を更新
 
   Scenario: 取得失敗時にフォールバックする
     Given ネットワークエラー or 404
-    When エンドポイントが失敗する
-    Then エラーを console.error でログ出力
-    And その日の当該メトリクスは upsert をスキップ（前日値を維持）
-    And HTTP 200 を返す（Vercel Cron のリトライを防ぐため）
+    When fetch が失敗する
+    Then console.error にログ
+    And 対象メトリクスの書き込みはスキップ（前日値を維持）
+    And exit code 0 で終了（手動再実行できるように）
 
-  Scenario: 手動トリガーできる
-    Given peintangos がローカルから叩きたい
-    When CRON_SECRET を付けた curl で叩く
+  Scenario: 手動実行と自動実行
+    Given peintangos の macOS ローカル
+    When `npm run rss-ingest`（or `tsx scripts/rss-ingest.ts`）を実行
     Then 同じ処理が走る
+    And launchd / cron で日次トリガーできる（設定は README に書く）
 ```
 
 ## Implementation Steps
 
-- [ ] `personal-agent/.env.local` に NOTE_USERNAME、ZENN_USERNAME、CRON_SECRET を追加
-- [ ] `personal-agent/app/api/cron/rss-ingest/route.ts` を作成
-- [ ] RSS parser（`fast-xml-parser` or `rss-parser`）を導入
-- [ ] 共通関数 `fetchFeedItemCount(url)` を `personal-agent/lib/rss/` に分離、テスト付き
-- [ ] Supabase の service_role key で owner_id を peintangos に固定して upsert
-- [ ] `personal-agent/vercel.json` に crons 設定を追加
-- [ ] Authorization ヘッダ検証（`Bearer ${CRON_SECRET}`）
-- [ ] ローカルで curl テスト
-- [ ] 初回 deploy 後、Vercel ダッシュボードで Cron が走ることを確認
-- [ ] 参照した Vercel Cron / RSS parser の docs を `raw/articles/` に投下
-- [ ] `knowledge.md` に観察を記録（X が手入力なのに note/Zenn だけ自動化した理由・ハマりなど）
+- [ ] `personal-agent/scripts/rss-ingest.ts` を作成（または .mjs でもよい）
+- [ ] RSS parser を導入（`fast-xml-parser` or `rss-parser`）
+- [ ] 共通関数 `fetchFeedItemCount(url)` を `lib/rss/` に分離、単体テスト付き
+- [ ] `lib/data/actuals.ts` の `writeDayActuals` を利用してファイルを upsert
+- [ ] `package.json` に `rss-ingest` スクリプトを追加（`tsx scripts/rss-ingest.ts`）
+- [ ] `.env.example` を追加（NOTE_USERNAME、ZENN_USERNAME）
+- [ ] README に launchd または cron の設定例を記載
+- [ ] 参照した RSS parser docs を `raw/articles/` に投下
+- [ ] `knowledge.md` に観察を記録（Vercel Cron をやめて node script にしたことで認証不要の副次的メリットを獲得、など）
 - [ ] Review（`/code-review`）

@@ -23,7 +23,9 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 - **MVP は可視化に絞る** — 対話・レコメンド・AI 判断は本 PRD のスコープ外
 - **ハイブリッド実績取得** — RSS で取れるもの（note / Zenn）は即自動化、残りは手入力。最初から全自動を狙わない
 - **LLM Wiki と並走** — 開発中に `raw/` に参考資料を投下し、`wiki/` を organic に育てる。これが後続 PRD で Personal Agent が読む知識層になる
-- **身の丈スタック** — Next.js + Supabase + Vercel の定番構成で速く作り、動くものを早く回す
+- **身の丈スタック** — Next.js + markdown データ層 + Vercel 静的 snapshot。単一ユーザーに Supabase は過剰と判断し、data 層を markdown ファイルに揃えた（2026-04-17 ピボット、`knowledge.md` 参照）
+- **markdown-first**: 目標と実績はすべて .md ファイル。LLM Wiki の `raw/` `wiki/` と同じ言語。Personal Agent が知識層として区別なく読める
+- **Git が変更履歴**: 目標追加 / 実績記録はコミットとして残り、blame / log で追跡できる
 - **段階的可視性** — 目標は自分だけ。事業計画のみ、将来メンター / 投資家に共有できる公開 URL を発行できる
 
 ## Scope
@@ -31,23 +33,25 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 ### In Scope
 
 - `personal-agent/` サブディレクトリに Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui のアプリを配置
-- Supabase 接続（Postgres + Auth + RLS）
+- markdown-based データ層（`personal-agent/data/goals/*.md`、`personal-agent/data/actuals/{yyyy-mm-dd}.md`）
+- zod スキーマと `lib/data/` の読み書きヘルパー
 - 4 時間軸の目標管理 UI（3 年 / 1 年 / 半年 / 1 ヶ月）
 - 目標ラベル: 行動目標 / 結果目標
-- note / Zenn の記事数を RSS で日次自動取得（Vercel Cron）
-- X / 社長アポ / イベント / 商談 の手入力フォーム
-- ダッシュボード: 時間軸タブ + 目標カード + 実績グラフ + 進捗率
-- 事業計画 PPT の配置（Google Slides 埋め込み or 静的 pptx 配信）＋共有 URL
+- note / Zenn の記事数を RSS で取得し、`data/actuals/` の markdown を書き換える（ローカル手動 or node スクリプト）
+- X / 社長アポ / イベント / 商談 の手入力フォーム（Server Action が markdown を書き換える、ローカル `npm run dev` 前提）
+- ダッシュボード: 時間軸タブ + 目標カード + 実績グラフ + 進捗率（静的生成 + Vercel で read-only snapshot）
+- 事業計画: Google Slides 公開 URL を `data/business-plan.md` 等で管理、ダッシュボードから 1 クリック
 
 ### Out of Scope
 
 - Personal Agent の対話 UI（次期 PRD）
-- 複雑な権限モデル（本人 + 事業計画公開 URL のみで十分）
+- **マネージド DB / 認証基盤**（Supabase 等）— 単一ユーザーに過剰、markdown ファイルで十分
 - X API 有料プランの契約
 - モバイルアプリ化
 - 多言語化
 - リアルタイム通知（Push / メール）
 - KPI 予測・AI レコメンド
+- Vercel 本番での書き込み（ephemeral fs のため、書き込みは **ローカル `npm run dev` のみ**）
 
 ## Target Users
 
@@ -64,13 +68,13 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 
 ## Functional Requirements
 
-- FR-1: 目標を CRUD できる（時間軸 4 段、行動/結果ラベル、対象メトリクスと目標値）
-- FR-2: 実績を手入力できる（メトリクス種別、日付、数量、メモ）
-- FR-3: note と Zenn の記事数を RSS 経由で日次取得し実績として記録する
-- FR-4: ダッシュボードで時間軸タブを切り替え、目標 vs 実績の進捗率を表示する
-- FR-5: 事業計画 PPT を配置し、認証不要の共有 URL を発行できる
-- FR-6: ログインは Supabase Auth（Email OTP）で行う
-- FR-7: すべてのテーブルに RLS を設定し、本人以外は読み書きできない（事業計画公開 URL 経由を除く）
+- FR-1: 目標を CRUD できる（時間軸 4 段、行動/結果ラベル、対象メトリクスと目標値）。各目標は `data/goals/{id}.md` に対応
+- FR-2: 実績を手入力できる（メトリクス種別、日付、数量、メモ）。各日は `data/actuals/{yyyy-mm-dd}.md` に対応、frontmatter に 6 メトリクスが入る
+- FR-3: note と Zenn の記事数を RSS 経由で取得し、`data/actuals/{today}.md` の frontmatter を書き換える
+- FR-4: ダッシュボードで時間軸タブを切り替え、目標 vs 実績の進捗率を表示する（静的生成、data/ を read）
+- FR-5: 事業計画（Google Slides URL）を `data/business-plan.md` 等で管理し、ダッシュボードから 1 クリックで開ける。Slides 自体は Google 側の公開範囲設定で共有する
+- FR-6: 認証は設けない。単一ユーザー前提、ローカル運用 / リポジトリアクセスが authn を兼ねる
+- FR-7: すべての書き込みは Server Action（ローカル `npm run dev` で走る）が `fs` 経由で markdown を書く。Vercel 本番では書き込みは無効（ephemeral fs）
 - FR-8: 開発中に参照した外部資料は `raw/` に投下し、spec 完了時に必要に応じて Ingest を実行して `wiki/` を育てる
 
 ## UX Requirements
@@ -85,11 +89,11 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 
 - **フレームワーク**: Next.js 16 (App Router) + TypeScript + Turbopack
 - **スタイリング**: Tailwind CSS + shadcn/ui
-- **DB / Auth**: Supabase (Postgres + Auth、RLS 必須)
-- **ホスティング**: Vercel
-- **バッチ**: Vercel Cron（RSS 日次取得）
-- **事業計画配信**: Google Slides 埋め込み or Vercel 配信の静的 pptx（spec-007 で決定）
-- **認証方式**: Email OTP（Supabase Auth）
+- **データ層**: markdown ファイル（`data/goals/*.md`、`data/actuals/{yyyy-mm-dd}.md`）。parser は gray-matter、スキーマは zod
+- **認証**: なし（単一ユーザー、ローカル運用）
+- **ホスティング**: Vercel（静的 snapshot として配信、書き込みは無効）
+- **バッチ**: ローカル手動実行 or `node` スクリプト（RSS を fetch して data/actuals に書き込む）。Vercel Cron は不要
+- **事業計画**: Google Slides 公開 URL を `data/business-plan.md` 等で管理（spec-007 で決定）
 - **ブランチ / PR**: `ralph/personal-agent`。spec 完了ごとにコミット、最後に main へ PR
 
 ## Repository Layout
@@ -102,7 +106,10 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 │   ├── app/
 │   ├── components/
 │   ├── lib/
-│   ├── supabase/migrations/
+│   │   └── data/                # markdown 読み込みヘルパー + zod schema
+│   ├── data/                    # markdown データ層（goals, actuals）
+│   │   ├── goals/
+│   │   └── actuals/
 │   └── package.json
 ├── raw/                         # LLM Wiki（既存、外部資料を逐次投下）
 ├── wiki/                        # LLM Wiki（既存、organic に育てる）
@@ -111,6 +118,8 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 │   └── prd-personal-agent/      # 本 PRD
 └── CLAUDE.md                    # LLM Wiki スキーマ定義済み
 ```
+
+3 階層の markdown がそろう（`raw/`、`wiki/`、`personal-agent/data/`）ことで、Personal Agent は全部を同じ読み方で触れる。
 
 ## Observation Protocol（LLM Wiki organic growth）
 
@@ -129,9 +138,9 @@ peintangos は個人事業 / スタートアップの立ち上げに向けて動
 | Milestone | Description | Target Date |
 |-----------|-------------|-------------|
 | M1 | spec-001 完了（Next.js 基盤 + Vercel 接続） | 2026-04-20 |
-| M2 | spec-002 完了（Supabase + データモデル） | 2026-04-22 |
+| M2 | spec-002 完了（markdown データ層 scaffold） | 2026-04-22 |
 | M3 | spec-003 完了（目標管理 UI） | 2026-04-25 |
 | M4 | spec-004 + spec-005 完了（手入力 + RSS 自動取得） | 2026-04-29 |
 | M5 | spec-006 完了（ダッシュボード可視化） | 2026-05-03 |
-| M6 | spec-007 完了（事業計画 PPT） → MVP 公開 | 2026-05-05 |
+| M6 | spec-007 完了（事業計画 Slides URL） → MVP 公開 | 2026-05-05 |
 | M7 | Phase E 準備 — knowledge.md が記事素材として充実 | 2026-05-07 |
