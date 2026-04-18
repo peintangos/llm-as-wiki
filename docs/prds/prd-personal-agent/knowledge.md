@@ -211,6 +211,60 @@ shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-b
 - body の append は `# {date}` の見出しに ISO timestamp 付きリスト行を足す形式。編集履歴としても機能する（後で `## 変更履歴` セクションに整理しても良い）
 - フィルタ UI は base-ui Select ではなくネイティブ `<select>`。`<form method="get">` で URL クエリ駆動にすれば Server Component の searchParams で完結する。base-ui Select は `onValueChange` が必要な client state なのでフィルタ用途には重い
 
+### 2026-04-18 — spec-005: RSS パーサー依存を捨てて正規表現 + fetch で十分
+
+spec は「RSS parser を導入（`fast-xml-parser` or `rss-parser`）」と書いていたが、実装時に「記事数を数えるだけなら正規表現で十分」と判断して parser 依存を落とした。
+
+**観察:**
+
+- `<item\b[^>]*>` と `<entry\b[^>]*>` のタグ数を数えるだけ。RSS 2.0 と Atom の両方をカバーできる
+- `<itemCount>` のような紛らわしいタグは `\b` 境界で除外される
+- テストで RSS 2.0 / Atom / 空フィード / 紛らわしいタグ / fetch 成功 / 非 2xx の 6 ケースを確認。全て pass
+- 依存追加ゼロで完結したため、next build に影響なし、devDependencies も増やさない（tsx は test runner 用途で別途追加）
+
+**方針として:**
+
+- 「依存を入れるかどうか」は spec が規定する要求ではなく実装側の判断対象。spec に `fast-xml-parser` と書いてあっても、成果が同等ならより軽量な実装を優先する
+- 「参照した parser docs を raw/ に投下」という spec 項目は、parser を使わなかったので該当なし → skip と記録
+
+### 2026-04-18 — spec-005: node:test + tsx でテスト基盤を最小構成で立ち上げた
+
+プロジェクトは jest / vitest を入れていない状態だった。spec-005 が `fetchFeedItemCount` の単体テストを要求したので、最小工数でテスト基盤を整えた。
+
+**採用:**
+
+- `node --test`（Node 20 以降の組み込みテストランナー）+ tsx（TypeScript を Node に直接読み込ませる loader）
+- `package.json` の test script: `tsx --test lib/rss/*.test.ts`
+- テストは `lib/rss/fetchFeedItemCount.test.ts` に配置し、`import test from "node:test"; import assert from "node:assert/strict"` を使う
+
+**理由:**
+
+- Next.js ビルドと完全に分離できる（`next build` は `__tests__` や `.test.ts` を無視、`tsx --test` も production ビルド経路に影響しない）
+- Jest / Vitest の設定ファイル、ts-jest / vite-config、jsdom などを一切入れなくて済む
+- Node の組み込みテストランナーは TAP 出力、signal handling、並列実行をすべてサポート済み
+- fetch はグローバルなので `fetchImpl` を DI する形にすれば stub 可能、モック lib も不要
+
+**制限:**
+
+- React コンポーネントのレンダリングテストはできない（jsdom + testing-library が必要）
+- しかし本 PRD は UI 側は chrome-devtools の実ブラウザ検証で代替しているので問題なし
+- util 層・データ層のテストだけが必要 → node:test で十分
+
+この組み合わせは **「純関数層にだけテストを入れたい」軽量プロジェクト** のベースラインとして再利用できる。Ralph Matsuo テンプレ本家にも backport 候補。
+
+### 2026-04-18 — spec-005: Vercel Cron を選ばなかったことで得た副次的メリット
+
+PRD 段階で「Vercel Cron でサーバレス定期実行するか、ローカル node script で手動 / launchd 実行にするか」迷った末、後者を選んだ。実装してみて気づいた副次的メリット:
+
+- **認証不要**: Vercel Cron は Authorization ヘッダー付き内部 request を route handler に送る構造。secret の env 配置・検証が必須。ローカル実行はリポジトリアクセス自体が authn 相当なので不要
+- **書き込みが永続化する**: Vercel は ephemeral fs なので route handler で `fs.writeFile` しても reboot で消える。ローカル実行なら git commit + push のフローに自然に乗る
+- **fetch 元 IP が自分**: note.com / Zenn 側から見ると普通のユーザーアクセス。Vercel の IP レンジから大量 fetch が飛ぶと rate limit リスクがあるが、個人 PC からの 1 日 1 回なら無関係
+- **デバッグが容易**: 手元の terminal で `NOTE_USERNAME=... npm run rss-ingest` を打てば即座に結果が見える。Vercel Cron だと Functions ログを都度見る必要がある
+
+**記事ネタ:**
+
+> Karpathy 原典にもなかった観察: 「個人運用 LLM Wiki の自動化は、サーバレス Cron よりローカル scheduled script のほうが素直」
+
 ### 2026-04-18 — base-ui Select の `disabled` は SelectTrigger ではなく Root に渡す
 
 編集ページでメトリクスと日付をロックするため、ActualForm に `lockMetricAndDate` フラグを入れた。base-ui の `Select` は `<Select disabled>` を Root に渡すと trigger が greyed out になる挙動で、shadcn の radix-based Select と同じ。ただし hidden input で値を送る必要がある（disabled な `<select>` は form submission に含まれない）ので、`{lockMetricAndDate && <input type="hidden" name="metric_key" value={metricKey} />}` を併設する。

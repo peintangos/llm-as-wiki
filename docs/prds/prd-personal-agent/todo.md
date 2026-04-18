@@ -29,9 +29,9 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-004: `app/actuals/` のページ（一覧 + 新規 + 編集）と ActualForm / ActualTable
 - [x] spec-004: `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter merge）
 - [x] spec-004: source='rss' 行は read-only 扱い、フィルタ UI
-- [ ] spec-005: `scripts/rss-ingest.ts`（note + Zenn RSS fetch）
-- [ ] spec-005: `lib/rss/` に fetchFeedItemCount util + テスト
-- [ ] spec-005: package.json に `rss-ingest` スクリプト、launchd / cron 設定例を README に記載
+- [x] spec-005: `scripts/rss-ingest.ts`（note + Zenn RSS fetch）
+- [x] spec-005: `lib/rss/` に fetchFeedItemCount util + テスト
+- [x] spec-005: package.json に `rss-ingest` スクリプト、launchd / cron 設定例を README に記載
 - [ ] spec-006: トップページ = ダッシュボード化、HorizonTabs 統合
 - [ ] spec-006: GoalProgressCard（進捗率計算 util + プログレスバー）
 - [ ] spec-006: ActualsChart（Recharts）、空状態 UI、URL クエリ `?tab=<horizon>` と UI 同期

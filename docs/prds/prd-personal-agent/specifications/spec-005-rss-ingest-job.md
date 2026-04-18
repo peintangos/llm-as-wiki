@@ -49,13 +49,13 @@ Feature: RSS ingestion into data/actuals/ markdown
 
 ## Implementation Steps
 
-- [ ] `personal-agent/scripts/rss-ingest.ts` を作成（または .mjs でもよい）
-- [ ] RSS parser を導入（`fast-xml-parser` or `rss-parser`）
-- [ ] 共通関数 `fetchFeedItemCount(url)` を `lib/rss/` に分離、単体テスト付き
-- [ ] `lib/data/actuals.ts` の `writeDayActuals` を利用してファイルを upsert
-- [ ] `package.json` に `rss-ingest` スクリプトを追加（`tsx scripts/rss-ingest.ts`）
-- [ ] `.env.example` を追加（NOTE_USERNAME、ZENN_USERNAME）
-- [ ] README に launchd または cron の設定例を記載
-- [ ] 参照した RSS parser docs を `raw/articles/` に投下
-- [ ] `knowledge.md` に観察を記録（Vercel Cron をやめて node script にしたことで認証不要の副次的メリットを獲得、など）
-- [ ] Review（`/code-review`）
+- [x] `personal-agent/scripts/rss-ingest.ts` を作成（または .mjs でもよい）
+- [x] RSS parser を導入（`fast-xml-parser` or `rss-parser`）→ 依存追加を避け、正規表現で `<item>` / `<entry>` を数える軽量実装に変更（knowledge.md 参照）
+- [x] 共通関数 `fetchFeedItemCount(url)` を `lib/rss/` に分離、単体テスト付き（node:test + tsx、6 tests）
+- [x] `lib/data/actuals.ts` の `writeDayActuals` を利用してファイルを upsert
+- [x] `package.json` に `rss-ingest` スクリプトを追加（`tsx scripts/rss-ingest.ts`）
+- [x] `.env.example` を追加（NOTE_USERNAME、ZENN_USERNAME）
+- [x] README に launchd または cron の設定例を記載
+- [x] 参照した RSS parser docs を `raw/articles/` に投下 → 今回は parser を導入しなかったため skip。代わりに「正規表現で十分だった」という観察を knowledge.md に記録
+- [x] `knowledge.md` に観察を記録（Vercel Cron をやめて node script にしたことで認証不要の副次的メリットを獲得、など）
+- [x] Review（`/code-review`）

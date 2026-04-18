@@ -74,6 +74,64 @@ personal-agent/
 
 `../raw/`（外部資料）・`../wiki/`（LLM 整理の二次資料）・`personal-agent/data/`（本人のログ）の 3 階層すべてが markdown。Personal Agent は将来、この 3 つを区別なく読む設計。
 
+## RSS 自動取得（spec-005）
+
+note.com と Zenn の RSS から記事数を取得し、`data/actuals/{today}.md` の
+`metrics.note_count` / `metrics.zenn_count` を `source='rss'` で書き込む
+ローカル node スクリプト。**Vercel Cron は使わない**（本番は read-only
+snapshot で書き込みが永続化しないため）。
+
+```bash
+# .env.example を参考に username を設定
+cp .env.example .env.local
+# .env.local を編集: NOTE_USERNAME=peintangos / ZENN_USERNAME=peintangos
+
+# 手動実行
+npm run rss-ingest
+
+# 環境変数を明示的に渡す
+NOTE_USERNAME=peintangos ZENN_USERNAME=peintangos npm run rss-ingest
+
+# argv から渡す
+tsx scripts/rss-ingest.ts peintangos peintangos
+```
+
+### macOS launchd で日次実行
+
+`~/Library/LaunchAgents/com.peintangos.rss-ingest.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.peintangos.rss-ingest</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd /Users/matsuojumpei/Projects/llm-as-wiki/personal-agent &amp;&amp; NOTE_USERNAME=peintangos ZENN_USERNAME=peintangos /opt/homebrew/bin/npm run rss-ingest</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>/tmp/rss-ingest.log</string>
+  <key>StandardErrorPath</key><string>/tmp/rss-ingest.err.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.peintangos.rss-ingest.plist
+```
+
+### cron で日次実行（代替）
+
+```cron
+0 23 * * * cd /Users/matsuojumpei/Projects/llm-as-wiki/personal-agent && NOTE_USERNAME=peintangos ZENN_USERNAME=peintangos /opt/homebrew/bin/npm run rss-ingest >> /tmp/rss-ingest.log 2>&1
+```
+
+書き込まれた markdown は手動で `git commit + push` する（自動コミットは現状入れていない）。
+
 ## Deploy
 
 - **Production**: https://personal-agent-green.vercel.app
