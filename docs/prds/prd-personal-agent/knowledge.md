@@ -211,6 +211,48 @@ shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-b
 - body の append は `# {date}` の見出しに ISO timestamp 付きリスト行を足す形式。編集履歴としても機能する（後で `## 変更履歴` セクションに整理しても良い）
 - フィルタ UI は base-ui Select ではなくネイティブ `<select>`。`<form method="get">` で URL クエリ駆動にすれば Server Component の searchParams で完結する。base-ui Select は `onValueChange` が必要な client state なのでフィルタ用途には重い
 
+### 2026-04-18 — spec-006: HorizonTabs を `components/shared/` に抽出した
+
+spec-003 で作った `components/goals/HorizonTabs.tsx` をダッシュボードでも使うため、`components/shared/HorizonTabs.tsx` に移動した。元から `usePathname` + `useSearchParams` で URL 駆動の設計にしていたので、ダッシュボード（`/`）と /goals の両方から同じインスタンスで呼び出せば「tab state が親 page 側に閉じる」構造が自然に維持される。
+
+**観察:**
+
+- `pathname` を読むので、/ でも /goals でも動作が自動で分岐する（/goals?tab=X と /?tab=X のどちらにも正しくリンク）
+- クライアント側で `useRouter().push` を使うより、Link + URL クエリ駆動のほうがシンプルで Server Component 親が searchParams を読めば即状態を取り戻せる
+- spec-003 時点で「URL 駆動」を選んだ判断が、spec-006 での共通化を摩擦なく進めさせた。**先行 spec の小さな設計判断が後続 spec を楽にする例**
+
+### 2026-04-18 — spec-006: Recharts は shadcn/ui Chart primitive を使わず直接
+
+shadcn/ui 2.x には `chart` component があり、Recharts をラップしてテーマトークンと ChartContainer / ChartTooltipContent を提供する。今回 spec は「Recharts（or similar）」「shadcn/ui Chart の docs を raw/ に投下」と書いていたが、実装時に直接 Recharts を呼ぶ選択をした。
+
+**理由:**
+
+- Chart primitive は `ChartConfig` で label / color / icon を宣言する前置が必要。今回は 6 メトリクスに `METRIC_META` で既に label を持っており、二重定義になる
+- 色は Recharts の `stroke={COLORS[i]}` で直接指定、CSS variable `var(--color-chart-N, fallback)` を使うことで Tailwind v4 theme を尊重する余地も残した
+- ラップ層を薄く保つことで、Recharts 標準 API のドキュメントがそのまま読める
+
+**観察:**
+
+- Recharts v3 の `ResponsiveContainer` は親に `height` 指定が必要（% だと動かない）。`className="h-64 w-full"` で固定してから `<ResponsiveContainer width="100%" height="100%" />` が最小構成
+- `isAnimationActive={false}` を指定しないと page navigation のたびに linear 補間アニメが走って散漫に見える
+- Server Component からは `<ActualsChart>` を呼ぶと `"use client"` が必要（Recharts は DOM 依存）。ただし データ集計（`buildMultiMetricSeries`）は pure なので Server Component 側で計算してから渡す形にするとクライアント JS バンドルが減る
+
+### 2026-04-18 — spec-006: 進捗計算を 3 種の pure util に分離してテストした
+
+`lib/dashboard/progress.ts` に:
+
+- `sumMetricInPeriod(days, metric, start, end)` — 境界は inclusive
+- `computeGoalProgress(goal, days)` — 目標側の `target_value` と `metric_key` を見て percentage を返す。未設定なら `null`、超過は 100 にクランプ
+- `buildMultiMetricSeries(days, metrics, start, end)` — chart 用の flat row（date + metric1 + metric2 + ...）
+
+を切り出し、node:test で 8 ケース（ハッピーパス / 期間外除外 / target 0 / target undefined / metric_key undefined / 100 クランプ / inclusive 境界 / 複数メトリクス / 空メトリクス配列）を通した。
+
+**観察:**
+
+- pure 関数に切り分けると、React / Recharts を一切ロードせずに単体テストできる
+- `@/lib/data/schema` の path alias は tsx が tsconfig を読んで解決してくれた（別途 tsconfig-paths-loader 不要）
+- `makeGoal` / `makeDay` の factory を test 内に置くだけでテスト可読性が上がる
+
 ### 2026-04-18 — spec-005: RSS パーサー依存を捨てて正規表現 + fetch で十分
 
 spec は「RSS parser を導入（`fast-xml-parser` or `rss-parser`）」と書いていたが、実装時に「記事数を数えるだけなら正規表現で十分」と判断して parser 依存を落とした。

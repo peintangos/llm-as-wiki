@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { GoalCard } from "@/components/goals/GoalCard";
-import { HorizonTabs } from "@/components/goals/HorizonTabs";
+import { HorizonTabs } from "@/components/shared/HorizonTabs";
 import { listGoals } from "@/lib/data/goals";
 import { HORIZONS, type Horizon } from "@/lib/data/schema";
 

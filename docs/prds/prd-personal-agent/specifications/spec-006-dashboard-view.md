@@ -60,14 +60,14 @@ Feature: Dashboard visualization
 
 ## Implementation Steps
 
-- [ ] `personal-agent/app/(authed)/page.tsx` — ダッシュボード
-- [ ] `personal-agent/components/dashboard/HorizonTabs.tsx`（spec-003 と共通化）
-- [ ] `personal-agent/components/dashboard/GoalProgressCard.tsx`
-- [ ] `personal-agent/components/dashboard/ActualsChart.tsx`（Recharts）
-- [ ] `personal-agent/lib/dashboard/queries.ts` — goals と actuals を horizon / period でフィルタして返す
-- [ ] 進捗率計算ロジックを util に分離、テスト付き
-- [ ] 空状態 UI
-- [ ] URL クエリ (`?tab=month`) と UI 状態を同期
-- [ ] 参照した Recharts / shadcn/ui Chart の docs を `raw/articles/` に投下
-- [ ] `knowledge.md` に観察を記録
-- [ ] Review（`/code-review`）
+- [x] `personal-agent/app/(authed)/page.tsx` — ダッシュボード → 認証レイヤーがないため `app/page.tsx` に直接実装
+- [x] `personal-agent/components/dashboard/HorizonTabs.tsx`（spec-003 と共通化） → `components/shared/HorizonTabs.tsx` に移動して /goals とダッシュボードの両方から import
+- [x] `personal-agent/components/dashboard/GoalProgressCard.tsx`
+- [x] `personal-agent/components/dashboard/ActualsChart.tsx`（Recharts）
+- [x] `personal-agent/lib/dashboard/queries.ts` — goals と actuals を horizon / period でフィルタして返す → 専用モジュールを作らず、page 内で `listGoals` / `listDayActuals` + `buildMultiMetricSeries` の組み合わせで実現（過度な抽象化を避ける）
+- [x] 進捗率計算ロジックを util に分離、テスト付き（`lib/dashboard/progress.ts`、node:test で 8 ケース）
+- [x] 空状態 UI（全体が空 / 該当 horizon に目標なし / 期間内実績なし の 3 パターン）
+- [x] URL クエリ (`?tab=month`) と UI 状態を同期（shared HorizonTabs 経由で searchParams と双方向）
+- [x] 参照した Recharts / shadcn/ui Chart の docs を `raw/articles/` に投下 → 今回は Recharts の標準 API のみ使い docs 深掘りが不要だったため skip（判断を knowledge.md に記録）
+- [x] `knowledge.md` に観察を記録
+- [x] Review（`/code-review`）
