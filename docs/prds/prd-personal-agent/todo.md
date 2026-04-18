@@ -26,9 +26,9 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-003: `app/goals/{page, new/page, [id]/edit/page}.tsx` + `app/goals/actions.ts`（Server Action）
 - [x] spec-003: `app/page.tsx` に /goals へのリンクを追加
 - [x] spec-003: chrome-devtools で /goals と /goals/new を視覚確認、Select の label 表示修正
-- [ ] spec-004: `app/actuals/` のページ（一覧 + 新規 + 編集）と ActualForm / ActualTable
-- [ ] spec-004: `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter merge）
-- [ ] spec-004: source='rss' 行は read-only 扱い、フィルタ UI
+- [x] spec-004: `app/actuals/` のページ（一覧 + 新規 + 編集）と ActualForm / ActualTable
+- [x] spec-004: `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter merge）
+- [x] spec-004: source='rss' 行は read-only 扱い、フィルタ UI
 - [ ] spec-005: `scripts/rss-ingest.ts`（note + Zenn RSS fetch）
 - [ ] spec-005: `lib/rss/` に fetchFeedItemCount util + テスト
 - [ ] spec-005: package.json に `rss-ingest` スクリプト、launchd / cron 設定例を README に記載

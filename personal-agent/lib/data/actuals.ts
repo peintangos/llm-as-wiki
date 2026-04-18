@@ -5,9 +5,17 @@ import {
   type DayActuals,
   DayActualsFrontmatterSchema,
   type MetricKey,
+  type Source,
+  zeroedDayActuals,
 } from "./schema";
 
 const ACTUALS_DIR = path.join(process.cwd(), "data", "actuals");
+
+export interface DayActualsPatch {
+  metrics?: Partial<Record<MetricKey, number>>;
+  sources?: Partial<Record<MetricKey, Source>>;
+  appendBody?: string;
+}
 
 export async function listDayActuals(): Promise<DayActuals[]> {
   const entries = await fs.readdir(ACTUALS_DIR).catch(() => [] as string[]);
@@ -31,6 +39,36 @@ export async function getDayActuals(date: string): Promise<DayActuals | null> {
   const parsed = matter(raw);
   const data = DayActualsFrontmatterSchema.parse(parsed.data);
   return { ...data, body: parsed.content.trim() };
+}
+
+export async function writeDayActuals(
+  date: string,
+  patch: DayActualsPatch,
+): Promise<void> {
+  const existing = await getDayActuals(date);
+  const base: DayActuals = existing ?? { ...zeroedDayActuals(date), body: "" };
+
+  const metrics = { ...base.metrics, ...(patch.metrics ?? {}) };
+  const sources = { ...base.sources, ...(patch.sources ?? {}) };
+
+  let body = base.body;
+  const note = patch.appendBody?.trim();
+  if (note) {
+    const timestamp = new Date().toISOString();
+    const entry = `- ${timestamp}: ${note}`;
+    body = body ? `${body}\n\n${entry}` : `# ${date}\n\n${entry}`;
+  }
+
+  const frontmatter = DayActualsFrontmatterSchema.parse({
+    date,
+    metrics,
+    sources,
+  });
+
+  const content = matter.stringify(body.length > 0 ? `\n${body}\n` : "", frontmatter);
+
+  await fs.mkdir(ACTUALS_DIR, { recursive: true });
+  await fs.writeFile(path.join(ACTUALS_DIR, `${date}.md`), content, "utf8");
 }
 
 export function sumByMetric(

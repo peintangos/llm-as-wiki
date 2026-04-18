@@ -195,6 +195,26 @@ shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-b
 
 この「return か throw か」の分岐が Server Actions のクセ。TypeScript の型推論は緩いので、signature は `Promise<{ error?: string } | undefined>` にしてある。
 
+### 2026-04-18 — spec-004: `[date]/[metric]/edit` という二段動的ルートと flattened row モデル
+
+実績データは日別ファイル（`data/actuals/{yyyy-mm-dd}.md`）1 つに 6 メトリクス分の数量を持たせている。画面の一覧は「日付 × メトリクス」の flat row に展開して表示する。編集は行単位で必要なので URL は `/actuals/[date]/[metric]/edit` の二段動的ルートになった。
+
+**観察:**
+
+- 行の一意キーは `(date, metricKey)` の組。これをルート params に持たせれば Server Component だけで編集ページが完結する（`params: Promise<{ date: string; metric: string }>`）
+- 削除は「ファイル削除」ではなく「metrics[metric] を 0 に戻す」セマンティクス。ファイル内の他メトリクスが生き残るため、行削除と「ファイル自体の削除」を分けて考える必要があった
+- 一覧で表示するかどうかのフィルタは `value > 0 || source === "rss"` にした。zero かつ manual は「未記録」と同義なので除外
+
+**実装メモ:**
+
+- `writeDayActuals(date, patch: { metrics?, sources?, appendBody? })` を `getDayActuals` → 存在すれば merge / なければ `zeroedDayActuals` で初期化 の方針で 1 関数に集約
+- body の append は `# {date}` の見出しに ISO timestamp 付きリスト行を足す形式。編集履歴としても機能する（後で `## 変更履歴` セクションに整理しても良い）
+- フィルタ UI は base-ui Select ではなくネイティブ `<select>`。`<form method="get">` で URL クエリ駆動にすれば Server Component の searchParams で完結する。base-ui Select は `onValueChange` が必要な client state なのでフィルタ用途には重い
+
+### 2026-04-18 — base-ui Select の `disabled` は SelectTrigger ではなく Root に渡す
+
+編集ページでメトリクスと日付をロックするため、ActualForm に `lockMetricAndDate` フラグを入れた。base-ui の `Select` は `<Select disabled>` を Root に渡すと trigger が greyed out になる挙動で、shadcn の radix-based Select と同じ。ただし hidden input で値を送る必要がある（disabled な `<select>` は form submission に含まれない）ので、`{lockMetricAndDate && <input type="hidden" name="metric_key" value={metricKey} />}` を併設する。
+
 ### 2026-04-17 — initial Ingest は **observation-triggered** だった（重要）
 
 spec-001〜003 完走の後、peintangos から「なかなか compile しないのね / wiki, raw が育たない」と指摘されて初めて、wiki/ の初回 Ingest を実行した。

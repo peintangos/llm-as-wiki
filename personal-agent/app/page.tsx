@@ -30,12 +30,19 @@ export default async function Home() {
             <dt className="text-muted-foreground">data/actuals</dt>
             <dd className="text-right font-mono">{days.length} 日分</dd>
           </dl>
-          <Link href="/goals">
-            <Button className="w-full">目標を見る</Button>
-          </Link>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href="/goals">
+              <Button className="w-full">目標を見る</Button>
+            </Link>
+            <Link href="/actuals">
+              <Button variant="secondary" className="w-full">
+                実績を見る
+              </Button>
+            </Link>
+          </div>
           <p className="text-xs text-muted-foreground">
-            spec-003 で目標管理 UI（4 時間軸タブ + 行動/結果ラベル）が有効になりました。
-            spec-004 以降で実績入力とダッシュボードを追加します。
+            spec-003 で目標管理 UI、spec-004 で実績手入力フォームが有効になりました。
+            spec-005 以降で RSS 自動取得とダッシュボード可視化を追加します。
           </p>
         </CardContent>
       </Card>

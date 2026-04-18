@@ -51,13 +51,13 @@ Feature: Manual actuals entry form
 
 ## Implementation Steps
 
-- [ ] `app/actuals/page.tsx` — 一覧
-- [ ] `app/actuals/new/page.tsx` — 新規入力
-- [ ] `app/actuals/[date]/[metric]/edit/page.tsx` — 編集（date + metric で行を特定）
-- [ ] `components/actuals/ActualForm.tsx` — フォーム
-- [ ] `components/actuals/ActualTable.tsx` — 一覧
-- [ ] `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter を merge、既存ファイルがなければ zeroedDayActuals で初期化）
-- [ ] フィルタ UI（metric_key select + 日付レンジ）
-- [ ] source='rss' の行は read-only 扱い
-- [ ] `knowledge.md` に観察を記録
-- [ ] Review（`/code-review`）
+- [x] `app/actuals/page.tsx` — 一覧
+- [x] `app/actuals/new/page.tsx` — 新規入力
+- [x] `app/actuals/[date]/[metric]/edit/page.tsx` — 編集（date + metric で行を特定）
+- [x] `components/actuals/ActualForm.tsx` — フォーム
+- [x] `components/actuals/ActualTable.tsx` — 一覧
+- [x] `lib/data/actuals.ts` に `writeDayActuals(date, patch)` を追加（frontmatter を merge、既存ファイルがなければ zeroedDayActuals で初期化）
+- [x] フィルタ UI（metric_key select + 日付レンジ）
+- [x] source='rss' の行は read-only 扱い
+- [x] `knowledge.md` に観察を記録
+- [x] Review（`/code-review`）
