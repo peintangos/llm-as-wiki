@@ -5,6 +5,7 @@ import { HorizonTabs } from "@/components/shared/HorizonTabs";
 import { Button } from "@/components/ui/button";
 import { buildMultiMetricSeries } from "@/lib/dashboard/progress";
 import { listDayActuals } from "@/lib/data/actuals";
+import { getBusinessPlan } from "@/lib/data/business-plan";
 import { listGoals } from "@/lib/data/goals";
 import {
   HORIZONS,
@@ -25,7 +26,12 @@ export default async function DashboardPage({
   const params = await searchParams;
   const currentTab: Horizon = isHorizon(params.tab) ? params.tab : "month";
 
-  const [goals, days] = await Promise.all([listGoals(), listDayActuals()]);
+  const [goals, days, plan] = await Promise.all([
+    listGoals(),
+    listDayActuals(),
+    getBusinessPlan(),
+  ]);
+  const planAvailable = !!plan?.slides_url;
 
   if (goals.length === 0 && days.length === 0) {
     return (
@@ -100,6 +106,15 @@ export default async function DashboardPage({
           <Link href="/actuals">
             <Button variant="ghost">実績</Button>
           </Link>
+          {planAvailable ? (
+            <Link href="/business-plan">
+              <Button variant="ghost">事業計画</Button>
+            </Link>
+          ) : (
+            <Button variant="ghost" disabled title="slides_url が未設定">
+              事業計画
+            </Button>
+          )}
         </div>
       </header>
 

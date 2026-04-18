@@ -35,6 +35,6 @@ Mark completed tasks with `- [x]` instead of removing them.
 - [x] spec-006: トップページ = ダッシュボード化、HorizonTabs 統合
 - [x] spec-006: GoalProgressCard（進捗率計算 util + プログレスバー）
 - [x] spec-006: ActualsChart（Recharts）、空状態 UI、URL クエリ `?tab=<horizon>` と UI 同期
-- [ ] spec-007: `data/business-plan.md` テンプレ + `lib/data/business-plan.ts` reader
-- [ ] spec-007: `app/business-plan/page.tsx`（iframe 埋め込み + markdown メモ表示）
-- [ ] spec-007: dashboard に「事業計画を見る」ナビリンク、URL 未設定時の空状態 UI
+- [x] spec-007: `data/business-plan.md` テンプレ + `lib/data/business-plan.ts` reader
+- [x] spec-007: `app/business-plan/page.tsx`（iframe 埋め込み + markdown メモ表示）
+- [x] spec-007: dashboard に「事業計画を見る」ナビリンク、URL 未設定時の空状態 UI

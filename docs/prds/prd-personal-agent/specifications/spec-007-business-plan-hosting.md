@@ -53,12 +53,12 @@ Feature: Business plan URL hosting
 
 ## Implementation Steps
 
-- [ ] `data/business-plan.md` のテンプレートを作成（placeholder URL 付き、peintangos があとで Slides URL に差し替え）
-- [ ] `lib/data/business-plan.ts` を追加（read helper、zod schema: slides_url は URL 形式）
-- [ ] `app/business-plan/page.tsx` — 埋め込みビューア（iframe + markdown body 表示）
-- [ ] dashboard のヘッダ or サイドに「事業計画を見る」ナビリンク / ボタン
-- [ ] URL 未設定時の空状態 UI
+- [x] `data/business-plan.md` のテンプレートを作成（placeholder URL 付き、peintangos があとで Slides URL に差し替え）
+- [x] `lib/data/business-plan.ts` を追加（read helper、zod schema: slides_url は URL 形式） → schema は `z.string().default("")` として空 URL 許容（フォールバックシナリオ）。`toSlidesEmbedUrl` util で `/pub` / `/edit` を `/embed` に書き換え
+- [x] `app/business-plan/page.tsx` — 埋め込みビューア（iframe + markdown body 表示） → body は whitespace-pre-wrap のプレーンテキスト表示（markdown 整形ライブラリは導入せず、MVP 優先）
+- [x] dashboard のヘッダ or サイドに「事業計画を見る」ナビリンク / ボタン → `/` のナビに追加、`slides_url` 未設定時は disabled Button に切り替え
+- [x] URL 未設定時の空状態 UI
 - [ ] Google Slides の共有設定（"リンクを知っている全員" = unlisted）を peintangos が手動で設定（spec 外、運用メモ）
-- [ ] 参照した Google Slides 埋め込み docs を `raw/articles/` に投下
-- [ ] `knowledge.md` に観察を記録（Supabase business_plans テーブル + share_token + RLS を全部捨てて URL だけにしたらどれだけ軽くなったか）
-- [ ] Review（`/code-review`）
+- [x] 参照した Google Slides 埋め込み docs を `raw/articles/` に投下 → 標準の `/embed` pattern のみで完結したため skip（knowledge.md に判断記録）
+- [x] `knowledge.md` に観察を記録（Supabase business_plans テーブル + share_token + RLS を全部捨てて URL だけにしたらどれだけ軽くなったか）
+- [x] Review（`/code-review`）

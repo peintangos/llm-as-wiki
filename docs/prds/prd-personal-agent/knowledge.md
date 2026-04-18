@@ -211,6 +211,54 @@ shadcn の `base-nova` preset は `@base-ui/react` ベース。従来の radix-b
 - body の append は `# {date}` の見出しに ISO timestamp 付きリスト行を足す形式。編集履歴としても機能する（後で `## 変更履歴` セクションに整理しても良い）
 - フィルタ UI は base-ui Select ではなくネイティブ `<select>`。`<form method="get">` で URL クエリ駆動にすれば Server Component の searchParams で完結する。base-ui Select は `onValueChange` が必要な client state なのでフィルタ用途には重い
 
+### 2026-04-18 — spec-007: 事業計画は URL 1 行で済んだ（Supabase 案との比較）
+
+当初の Supabase 案では `business_plans` テーブル + RLS + `share_tokens` テーブル + トークン生成 API を設計していた。markdown ピボット後、spec-007 は以下に縮約した:
+
+- `data/business-plan.md`（frontmatter に `slides_url` / `visibility` / `updated_at`、body は自由記述）
+- `lib/data/business-plan.ts`（`getBusinessPlan` + `toSlidesEmbedUrl` util）
+- `app/business-plan/page.tsx`（iframe + body 表示）
+
+**Supabase 案から消えた要素:**
+
+- `business_plans` テーブルスキーマ
+- RLS policy（自分だけ read/write できる）
+- `share_tokens` テーブル + expiry（リンクを知る人だけ閲覧）
+- トークン発行 API（POST /api/business-plan/share-tokens）
+- iframe 内で fetch するためのサーバサイド proxy
+
+**どうなったか:**
+
+- Google Slides 側の「リンクを知っている全員」共有で可視性管理を完全委譲
+- ダッシュボード側は URL を開くだけ（target="_blank" + rel="noopener"）、もしくは iframe 埋め込み
+- コード量: zod schema 約 10 行 + reader 約 20 行 + util 約 5 行 + page 約 90 行 = 約 125 行
+- セキュリティ: 本リポジトリ側は share トークンを一切持たないので漏洩事故面が激減
+
+**教訓 — 単一ユーザー MVP の"当たり前":**
+
+> 「可視性の制御」「認証」「共有」は、SaaS 製品なら自前で持つが、**単一ユーザーの個人運用アプリなら外部サービス（Google, GitHub など）に完全委譲できる**。spec-002 の Supabase ピボットと同じ力学で、spec-007 でも "自分で作らない" が勝った。
+
+### 2026-04-18 — spec-007: Google Slides の `/pub` / `/edit` を `/embed` に正規化する
+
+ユーザーがペーストする Slides URL は複数形式がある:
+
+- `/pub?start=false&...`（公開プレゼンのスタート URL）
+- `/edit#slide=id.p1`（編集画面）
+- `/present?slide=id.p1`（プレゼンテーションモード）
+- `/embed`（埋め込み専用）
+
+iframe には `/embed` 形式を渡すのが正解。正規化 util を書いて 4 形式 → `/embed` に統一した:
+
+```ts
+function toSlidesEmbedUrl(url: string): string | null {
+  const match = url.match(/\/presentation\/d\/([^/]+)/);
+  if (!match) return null;
+  return `https://docs.google.com/presentation/d/${match[1]}/embed`;
+}
+```
+
+非 Slides URL には null を返し、呼び出し側で「URL は保存したが iframe は表示しない（"リンクを開く" ボタンだけ）」というフォールバック UX を提供。
+
 ### 2026-04-18 — spec-006: HorizonTabs を `components/shared/` に抽出した
 
 spec-003 で作った `components/goals/HorizonTabs.tsx` をダッシュボードでも使うため、`components/shared/HorizonTabs.tsx` に移動した。元から `usePathname` + `useSearchParams` で URL 駆動の設計にしていたので、ダッシュボード（`/`）と /goals の両方から同じインスタンスで呼び出せば「tab state が親 page 側に閉じる」構造が自然に維持される。
